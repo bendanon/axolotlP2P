@@ -1,0 +1,14 @@
+main
+org.whispersystems.libaxolotl
+org.whispersystems.libaxolotl.ecc
+org.whispersystems.libaxolotl.groups
+org.whispersystems.libaxolotl.groups.ratchet
+org.whispersystems.libaxolotl.groups.state
+org.whispersystems.libaxolotl.kdf
+org.whispersystems.libaxolotl.logging
+org.whispersystems.libaxolotl.protocol
+org.whispersystems.libaxolotl.ratchet
+org.whispersystems.libaxolotl.state
+org.whispersystems.libaxolotl.state.impl
+org.whispersystems.libaxolotl.util
+org.whispersystems.libaxolotl.util.guava

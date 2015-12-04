@@ -20,6 +20,7 @@ public class SecureParty
 {
     //Similar for all sessions
     private String email;
+    private int numericId;
     private IdentityKeyPair identityKeyPair;
     private ECKeyPair signedPair;
     private byte[] signedPreKeySignature;
@@ -33,6 +34,7 @@ public class SecureParty
     public SecureParty(String email)
     {
         this.email = email;
+        this.numericId = email.hashCode();
         InitializeStore(email);
     }
 
@@ -44,7 +46,12 @@ public class SecureParty
         IdentityKeyPair idPair = new IdentityKeyPair(idKey, ecPair.getPrivateKey());
 
         //Create an in-memory Axolotl store (non-persistent)
-        return new InMemoryAxolotlStore(idPair, email.hashCode());
+        return new InMemoryAxolotlStore(idPair, numericId);
+    }
+
+    private int getSignedPrekeyId()
+    {
+        return (email + "signed").hashCode();
     }
 
     private void InitializeStore(String email)
@@ -61,9 +68,9 @@ public class SecureParty
                 signedPreKeySignature = Curve.calculateSignature(identityKeyPair.getPrivateKey(),
                         signedPair.getPublicKey().serialize());
 
-                SignedPreKeyRecord record = new SignedPreKeyRecord(signedPair.getPublicKey().hashCode(),
+                SignedPreKeyRecord record = new SignedPreKeyRecord(getSignedPrekeyId(),
                         0, signedPair, signedPreKeySignature);
-                store.storeSignedPreKey(signedPair.getPublicKey().hashCode(), record);
+                store.storeSignedPreKey(getSignedPrekeyId(), record);
 
             } catch (InvalidKeyException e) {
                 e.printStackTrace();
@@ -75,22 +82,31 @@ public class SecureParty
         }
     }
 
-    public PreKeyBundle GeneratePrekey()
+    public PreKeyBundle GetKeyExchangeMessageFor(String peerEmail)
     {
         //Create new ephemeral key
         ephemeralPair = Curve.generateKeyPair();
-        PreKeyRecord record = new PreKeyRecord(ephemeralPair.getPublicKey().hashCode(), ephemeralPair);
-        store.storePreKey(ephemeralPair.getPublicKey().hashCode(), record);
 
-        return new PreKeyBundle(email.hashCode(), email.hashCode(), ephemeralPair.getPublicKey().hashCode(),
-                ephemeralPair.getPublicKey(), signedPair.getPublicKey().hashCode(), signedPair.getPublicKey(),
+        //Get an id for the prekey for this peer
+        int prekeyId = peerEmail.hashCode();
+        PreKeyRecord record = new PreKeyRecord(prekeyId, ephemeralPair);
+
+        // remove the old prekey in case we already had a conversation
+        store.removePreKey(prekeyId);
+
+        //Store the new prekey
+        store.storePreKey(prekeyId, record);
+
+
+        return new PreKeyBundle(numericId, numericId, prekeyId,
+                ephemeralPair.getPublicKey(), getSignedPrekeyId(), signedPair.getPublicKey(),
                 signedPreKeySignature, identityKeyPair.getPublicKey());
     }
 
-    public void StartSession(String counterpartEmail, PreKeyBundle bundle)
+    public void StartSession(String peerEmail, PreKeyBundle bundle)
     {
         //Create a session builder
-        AxolotlAddress remoteAddress = new AxolotlAddress(counterpartEmail, counterpartEmail.hashCode());
+        AxolotlAddress remoteAddress = new AxolotlAddress(peerEmail, peerEmail.hashCode());
         builder = new SessionBuilder(store, remoteAddress);
 
         try {
@@ -162,5 +178,4 @@ public class SecureParty
 
         return plaintext;
     }
-
 }

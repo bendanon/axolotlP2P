@@ -15,6 +15,9 @@ repositories {
 dependencies {
     compile "org.whispersystems:curve25519-java:${curve25519_version}"
     compile 'com.google.protobuf:protobuf-java:2.5.0'
+    compile 'jivesoftware:smack:3.1.0'
+    compile 'jivesoftware:smackx:3.1.0'
+
 
     testCompile ('junit:junit:3.8+')
 }

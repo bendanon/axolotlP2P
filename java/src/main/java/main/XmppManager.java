@@ -17,7 +17,7 @@ public class XmppManager implements commManager {
     
 	 	
 	private static final int packetReplyTimeout = 500; // millis
-	    private final String SERVER = "10.10.20.15";
+	    private final String SERVER = "ben-probook";
 	    private final int PORT = 5222;
 	    private String server;
 	    private int port;

@@ -36,6 +36,7 @@ public class MainClass {
         System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
         System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
 
+
         String username = "user1";
         String password = "crypto";
         XmppManager xmppManager;
@@ -63,7 +64,7 @@ public class MainClass {
         }
 
         try {
-            xmppManager.sendMessage("Hello mate", "user2@nb-michaelr");
+            xmppManager.sendMessage("Hello mate", "user2@ben-probook");
         } catch (XMPPException e) {
             e.printStackTrace();
         }
@@ -77,13 +78,14 @@ public class MainClass {
                 e.printStackTrace();
             }
             try {
-                xmppManager.sendMessage("Hello mate", "user2@nb-michaelr");
+                xmppManager.sendMessage("Hello mate", "user2@ben-probook");
             } catch (XMPPException e) {
                 e.printStackTrace();
             }
         }
 
         xmppManager.disconnect();
+
 
     }
 }

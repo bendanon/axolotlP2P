@@ -1,5 +1,6 @@
 package main;
 
+import org.jivesoftware.smack.util.Base64;
 import org.whispersystems.libaxolotl.*;
 import org.whispersystems.libaxolotl.ecc.Curve;
 import org.whispersystems.libaxolotl.ecc.ECKeyPair;
@@ -11,6 +12,7 @@ import org.whispersystems.libaxolotl.state.PreKeyRecord;
 import org.whispersystems.libaxolotl.state.SignedPreKeyRecord;
 import org.whispersystems.libaxolotl.state.impl.InMemoryAxolotlStore;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -26,13 +28,11 @@ public class SecureParty
     private byte[] signedPreKeySignature;
     private AxolotlStore store;
 
-    //Maintained per session
-    private SessionBuilder builder;
-    private SessionCipher cipher;
-    private ECKeyPair ephemeralPair;
+    private HashMap<String, SecureSessionContext> sessions;
 
     public SecureParty(String email)
     {
+        sessions = new HashMap<>();
         this.email = email;
         this.numericId = email.hashCode();
         InitializeStore(email);
@@ -82,13 +82,13 @@ public class SecureParty
         }
     }
 
-    public PreKeyBundle GetKeyExchangeMessageFor(String peerEmail)
+    public String CreateKeyExchangeMessage(String peer)
     {
         //Create new ephemeral key
-        ephemeralPair = Curve.generateKeyPair();
+        ECKeyPair ephemeralPair = Curve.generateKeyPair();
 
         //Get an id for the prekey for this peer
-        int prekeyId = peerEmail.hashCode();
+        int prekeyId = peer.hashCode();
         PreKeyRecord record = new PreKeyRecord(prekeyId, ephemeralPair);
 
         // remove the old prekey in case we already had a conversation
@@ -97,23 +97,24 @@ public class SecureParty
         //Store the new prekey
         store.storePreKey(prekeyId, record);
 
-
-        return new PreKeyBundle(numericId, numericId, prekeyId,
+        return KeyExchangeUtil.serialize(new PreKeyBundle(numericId, numericId, prekeyId,
                 ephemeralPair.getPublicKey(), getSignedPrekeyId(), signedPair.getPublicKey(),
-                signedPreKeySignature, identityKeyPair.getPublicKey());
+                signedPreKeySignature, identityKeyPair.getPublicKey()));
     }
 
-    public void StartSession(String peerEmail, PreKeyBundle bundle)
+    public void ConsumeKeyExchangeMessage(String peerEmail, String keyExchangeMessage)
     {
         //Create a session builder
         AxolotlAddress remoteAddress = new AxolotlAddress(peerEmail, peerEmail.hashCode());
-        builder = new SessionBuilder(store, remoteAddress);
+        SessionBuilder builder = new SessionBuilder(store, remoteAddress);
 
         try {
 
             //Process the counterpart prekey
-            builder.process(bundle);
-            cipher = new SessionCipher(store, remoteAddress);
+            builder.process(KeyExchangeUtil.deserialize(keyExchangeMessage));
+            SecureSessionContext ctx = new SecureSessionContext();
+            ctx.setSessionCipher(new SessionCipher(store, remoteAddress));
+            sessions.put(peerEmail,ctx);
 
         } catch (InvalidKeyException e) {
             e.printStackTrace();
@@ -122,17 +123,18 @@ public class SecureParty
         }
     }
 
-    public byte[] sendSecure(byte[] plaintext)
+    public String encrypt(String peer, String plaintext)
     {
-        return cipher.encrypt(plaintext).serialize();
+        return Base64.encodeBytes(sessions.get(peer).getSessionCipher().encrypt(plaintext.getBytes()).serialize());
     }
 
-    public byte[] recievePreKeyMessage(byte[] ciphertext)
+    public byte[] decryptPreKeyMessage(String peer, String ciphertext)
     {
         byte[] plaintext = null;
 
         try {
-            plaintext =  cipher.decrypt(new PreKeyWhisperMessage(ciphertext));
+            plaintext =  sessions.get(peer).getSessionCipher()
+                    .decrypt(new PreKeyWhisperMessage(Base64.decode(ciphertext)));
         } catch (InvalidMessageException e) {
             e.printStackTrace();
         } catch (InvalidVersionException e) {
@@ -153,19 +155,20 @@ public class SecureParty
     }
 
 
-    public byte[] receiveMessage(byte[] ciphertext)
+    public String decrypt(String peer, String ciphertext)
     {
         byte[] plaintext = null;
 
         try {
 
             //Try to parse it as WhisperMessage
-            plaintext = cipher.decrypt(new WhisperMessage(ciphertext));
+            plaintext = sessions.get(peer).getSessionCipher()
+                    .decrypt(new WhisperMessage(Base64.decode(ciphertext)));
 
         } catch (InvalidMessageException e) {
 
             //We failed to parse it as WhisperMessage, maybe its PPreKeyWhisperMessage
-            plaintext = recievePreKeyMessage(ciphertext);
+            plaintext = decryptPreKeyMessage(peer, ciphertext);
 
         } catch (LegacyMessageException e) {
             e.printStackTrace();
@@ -175,7 +178,6 @@ public class SecureParty
             e.printStackTrace();
         }
 
-
-        return plaintext;
+        return new String(plaintext);
     }
 }

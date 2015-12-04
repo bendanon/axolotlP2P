@@ -1,6 +1,5 @@
 package main;
 
-import org.whispersystems.libaxolotl.state.PreKeyBundle;
 //import org.jivesoftware.smack.XMPPException;
 
 /**
@@ -13,28 +12,18 @@ public class MainClass {
         SecureParty party1 = new SecureParty("party1");
         SecureParty party2 = new SecureParty("party2");
 
-        PreKeyBundle party1Bundle = party1.GetKeyExchangeMessageFor("party2");
-        PreKeyBundle party2Bundle = party2.GetKeyExchangeMessageFor("party1");
+        party1.ConsumeKeyExchangeMessage("party2", party2.CreateKeyExchangeMessage("party1"));
+        party2.ConsumeKeyExchangeMessage("party1", party1.CreateKeyExchangeMessage("party2"));
 
-        party1.StartSession("party2", KeyExchangeUtil.deserialize(KeyExchangeUtil.serialize(party2Bundle)));
-        party2.StartSession("party1", KeyExchangeUtil.deserialize(KeyExchangeUtil.serialize(party1Bundle)));
-
-        System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
-        System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party1.receiveMessage(party2.sendSecure("Hi Alice!".getBytes()))));
-        System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
-        System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
-        System.out.println(new String(party2.receiveMessage(party1.sendSecure("Hi Bob!".getBytes()))));
+        System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
+        System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
+        System.out.println(party1.decrypt("party2", party2.encrypt("party1", "Hi party1!")));
+        System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
+        System.out.println(party1.decrypt("party2", party2.encrypt("party1", "Hi party1!")));
+        System.out.println(party1.decrypt("party2", party2.encrypt("party1", "Hi party1!")));
+        System.out.println(party1.decrypt("party2", party2.encrypt("party1", "Hi party1!")));
+        System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
+        System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
 
 
         /*

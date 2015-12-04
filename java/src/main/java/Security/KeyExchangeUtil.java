@@ -1,4 +1,4 @@
-package main;
+package Security;
 
 import org.jivesoftware.smack.util.Base64;
 import org.whispersystems.libaxolotl.IdentityKey;

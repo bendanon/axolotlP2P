@@ -1,6 +1,6 @@
 package main;
 
-//import org.jivesoftware.smack.XMPPException;
+import Security.SecureParty;//import org.jivesoftware.smack.XMPPException;
 
 /**
  * Created by ben on 28/11/15.

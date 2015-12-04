@@ -11,9 +11,12 @@ public class MainClass {
     {
         SecureParty party1 = new SecureParty("party1");
         SecureParty party2 = new SecureParty("party2");
+        SecureParty party3 = new SecureParty("party3");
 
         party1.ConsumeKeyExchangeMessage("party2", party2.CreateKeyExchangeMessage("party1"));
         party2.ConsumeKeyExchangeMessage("party1", party1.CreateKeyExchangeMessage("party2"));
+        party2.ConsumeKeyExchangeMessage("party3", party3.CreateKeyExchangeMessage("party2"));
+        party3.ConsumeKeyExchangeMessage("party2", party2.CreateKeyExchangeMessage("party3"));
 
         System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
         System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
@@ -24,6 +27,10 @@ public class MainClass {
         System.out.println(party1.decrypt("party2", party2.encrypt("party1", "Hi party1!")));
         System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
         System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
+
+        System.out.println(party3.decrypt("party2", party2.encrypt("party3", "Hi party3!")));
+        System.out.println(party2.decrypt("party3", party3.encrypt("party2", "Hi party2!")));
+
 
 
         /*

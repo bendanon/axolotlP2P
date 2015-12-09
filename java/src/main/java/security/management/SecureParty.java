@@ -1,4 +1,4 @@
-package Security;
+package security.management;
 
 import org.jivesoftware.smack.util.Base64;
 import org.whispersystems.libaxolotl.*;
@@ -12,6 +12,10 @@ import org.whispersystems.libaxolotl.state.PreKeyBundle;
 import org.whispersystems.libaxolotl.state.PreKeyRecord;
 import org.whispersystems.libaxolotl.state.SignedPreKeyRecord;
 import org.whispersystems.libaxolotl.state.impl.InMemoryAxolotlStore;
+import security.trust.IIdentityWitness;
+import security.trust.ITrustStore;
+import security.trust.IWitnessGenerator;
+import security.utils.KeyExchangeUtil;
 
 import java.io.IOException;
 import java.security.KeyStoreException;

@@ -1,4 +1,4 @@
-package Security;
+package security.trust;
 
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.IdentityKeyPair;

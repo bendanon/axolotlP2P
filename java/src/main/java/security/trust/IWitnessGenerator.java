@@ -1,6 +1,7 @@
-package Security;
+package security.trust;
 
 import org.whispersystems.libaxolotl.IdentityKey;
+import security.trust.IIdentityWitness;
 
 /**
  * Created by ben on 08/12/15.

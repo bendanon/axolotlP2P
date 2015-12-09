@@ -1,11 +1,10 @@
 package main;
 
-import Security.ChatGroup;
-import Security.FingerprintWG;
-import Security.PersistentTrustStore;
-import Security.SecureParty;//import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.XMPPException;
 import org.whispersystems.libaxolotl.*;
+import security.management.SecureParty;
+import security.trust.FingerprintWG;
+import security.trust.PersistentTrustStore;
+import security.utils.PasswordDerivator;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -31,10 +30,23 @@ public class MainClass {
         PersistentTrustStore store2 = null;
         PersistentTrustStore store3 = null;
 
+        PasswordDerivator deriv = null;
         try {
-            store1 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party1"), "pass", false);
-            store2 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party2"), "pass", false);
-            store3 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party3"), "pass", false);
+            deriv = new PasswordDerivator("SHA-256", "pass");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            store1 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party1"),
+                    deriv.getPasswordDerivative(1), false);
+
+            store2 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party2"),
+                    deriv.getPasswordDerivative(2), false);
+
+            store3 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party3"),
+                    deriv.getPasswordDerivative(3), false);
+
         } catch (KeyStoreException e) {
             e.printStackTrace();
         } catch (CertificateException e) {

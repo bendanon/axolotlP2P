@@ -1,14 +1,17 @@
 package Security;
 
-import org.whispersystems.libaxolotl.SessionBuilder;
+import org.whispersystems.libaxolotl.IdentityKey;
+
 import org.whispersystems.libaxolotl.SessionCipher;
-import org.whispersystems.libaxolotl.ecc.ECKeyPair;
+
 
 /**
  * Created by ben on 04/12/15.
  */
 public class SecureSessionContext {
     private SessionCipher cipher;
+    private IdentityKey sessionIdentityKey;
+
 
     public SecureSessionContext()
     {
@@ -22,5 +25,13 @@ public class SecureSessionContext {
     public SessionCipher getSessionCipher()
     {
         return cipher;
+    }
+
+    public void setSessionIdentityKey(IdentityKey sessionIdentityKey) {
+        this.sessionIdentityKey = sessionIdentityKey;
+    }
+
+    public IdentityKey getSessionIdentityKey() {
+        return sessionIdentityKey;
     }
 }

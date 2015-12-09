@@ -1,10 +1,11 @@
-package security.trust;
+package security.trust.concrete;
 
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.IdentityKeyPair;
 import org.whispersystems.libaxolotl.InvalidKeyException;
 import org.whispersystems.libaxolotl.UntrustedIdentityException;
 import org.whispersystems.libaxolotl.ecc.ECPublicKey;
+import security.trust.ITrustStore;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,7 +19,7 @@ import java.security.cert.CertificateException;
 /**
  * Created by ben on 08/12/15.
  */
-public class PersistentTrustStore implements ITrustStore{
+public class PersistentTrustStore implements ITrustStore {
 
     private final KeyStore keyStore;
     private final KeyStore.ProtectionParameter protParam;

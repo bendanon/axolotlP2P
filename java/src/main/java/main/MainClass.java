@@ -2,8 +2,8 @@ package main;
 
 import org.whispersystems.libaxolotl.*;
 import security.management.SecureParty;
-import security.trust.FingerprintWG;
-import security.trust.PersistentTrustStore;
+import security.trust.concrete.FingerprintWG;
+import security.trust.concrete.PersistentTrustStore;
 import security.utils.PasswordDerivator;
 
 import java.io.IOException;

@@ -13,8 +13,12 @@ import org.whispersystems.libaxolotl.state.PreKeyRecord;
 import org.whispersystems.libaxolotl.state.SignedPreKeyRecord;
 import org.whispersystems.libaxolotl.state.impl.InMemoryAxolotlStore;
 
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by ben on 28/11/15.
@@ -33,7 +37,10 @@ public class SecureParty
 
     private HashMap<String, SecureSessionContext> sessions;
 
-    public SecureParty(String email, ITrustStore trustStore, IWitnessGenerator witnessGenerator) {
+    public SecureParty(String email, ITrustStore trustStore, IWitnessGenerator witnessGenerator) throws
+            CertificateException, NoSuchAlgorithmException, KeyStoreException,
+            UnrecoverableEntryException, InvalidKeyException, IOException {
+
         this.trustStore = trustStore;
         this.witnessGenerator = witnessGenerator;
         sessions = new HashMap<>();
@@ -47,8 +54,9 @@ public class SecureParty
         return witnessGenerator.generateWitness(identityKeyPair.getPublicKey());
     }
 
-    private AxolotlStore generateKeyStore(String email)
-    {
+    private AxolotlStore generateKeyStore(String email) throws CertificateException, NoSuchAlgorithmException,
+            KeyStoreException, IOException, UnrecoverableEntryException, InvalidKeyException {
+
         IdentityKeyPair idPair = trustStore.getIdentity();
 
         if(null == idPair)
@@ -69,32 +77,25 @@ public class SecureParty
         return (email + "signed").hashCode();
     }
 
-    private void initializeAxolotlStore(String email)
-    {
+    private void initializeAxolotlStore(String email) throws CertificateException, InvalidKeyException,
+            NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, IOException {
+
         store = generateKeyStore(email);
 
+        //Load the identity key pair from the store
         identityKeyPair = store.getIdentityKeyPair();
 
-        List<SignedPreKeyRecord> signedPrekeys = store.loadSignedPreKeys();
-        if(signedPrekeys.isEmpty())
-        {
-            signedPair = Curve.generateKeyPair();
-            try {
-                signedPreKeySignature = Curve.calculateSignature(identityKeyPair.getPrivateKey(),
-                        signedPair.getPublicKey().serialize());
+        //generate a signed prekey pair
+        signedPair = Curve.generateKeyPair();
 
-                SignedPreKeyRecord record = new SignedPreKeyRecord(getSignedPrekeyId(),
-                        0, signedPair, signedPreKeySignature);
-                store.storeSignedPreKey(getSignedPrekeyId(), record);
+        //Sign the signed prekey
+        signedPreKeySignature = Curve.calculateSignature(identityKeyPair.getPrivateKey(),
+                signedPair.getPublicKey().serialize());
 
-            } catch (InvalidKeyException e) {
-                e.printStackTrace();
-            }
-        }
-        else
-        {
-            signedPair = signedPrekeys.get(0).getKeyPair();
-        }
+        //Store the signed prekey
+        SignedPreKeyRecord record = new SignedPreKeyRecord(getSignedPrekeyId(),
+                0, signedPair, signedPreKeySignature);
+        store.storeSignedPreKey(getSignedPrekeyId(), record);
     }
 
     public String createKeyExchangeMessage(String peer)
@@ -124,40 +125,34 @@ public class SecureParty
      * @param keyExchangeMessage
      * @return true is the user is trusted, false otherwise
      */
-    public boolean consumeKeyExchangeMessage(String peer, String keyExchangeMessage)
-    {
+    public boolean consumeKeyExchangeMessage(String peer, String keyExchangeMessage) throws UnrecoverableEntryException,
+            NoSuchAlgorithmException, KeyStoreException, UntrustedIdentityException, InvalidKeyException {
+
         //Create a session builder
         AxolotlAddress remoteAddress = new AxolotlAddress(peer, peer.hashCode());
         SessionBuilder builder = new SessionBuilder(store, remoteAddress);
 
-        try {
+        //Process the counterpart prekey
+        PreKeyBundle bundle = KeyExchangeUtil.deserialize(keyExchangeMessage);
+        builder.process(bundle);
+        SecureSessionContext ctx = new SecureSessionContext();
+        ctx.setSessionCipher(new SessionCipher(store, remoteAddress));
+        ctx.setSessionIdentityKey(bundle.getIdentityKey());
 
-            //Process the counterpart prekey
-            PreKeyBundle bundle = KeyExchangeUtil.deserialize(keyExchangeMessage);
-            builder.process(bundle);
-            SecureSessionContext ctx = new SecureSessionContext();
-            ctx.setSessionCipher(new SessionCipher(store, remoteAddress));
-            ctx.setSessionIdentityKey(bundle.getIdentityKey());
+        sessions.put(peer,ctx);
 
-            sessions.put(peer,ctx);
-
-            //Check if the peer is trusted
-            if(trustStore.isTrusted(peer,bundle.getIdentityKey().getPublicKey()))
-            {
-                return true;
-            }
-
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (UntrustedIdentityException e) {
-            e.printStackTrace();
+        //Check if the peer is trusted
+        if(trustStore.isTrusted(peer,bundle.getIdentityKey().getPublicKey()))
+        {
+            return true;
         }
+
         return false;
     }
 
     /**
      * Once the user receives a witness for the peers public key,
-     * that is, some piece of data that can validate the identity key,
+     * that is, some piece of data that can authenticate the identity key,
      * call this method.
      *
      * IMPORTANT - this method must be called when a session is in progress
@@ -167,10 +162,9 @@ public class SecureParty
      * @param witness
      * @return true if the witness fits the session identity key
      */
-    public boolean consumeIdentityWitness(String peer, IIdentityWitness witness)
-    {
+    public boolean consumeIdentityWitness(String peer, IIdentityWitness witness) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         SecureSessionContext ctx = sessions.get(peer);
-        if(null == ctx || !witness.validate(ctx.getSessionIdentityKey()))
+        if(null == ctx || !witness.authenticate(ctx.getSessionIdentityKey()))
         {
             return false;
         }
@@ -184,35 +178,21 @@ public class SecureParty
         return Base64.encodeBytes(sessions.get(peer).getSessionCipher().encrypt(plaintext.getBytes()).serialize());
     }
 
-    public byte[] decryptPreKeyMessage(String peer, String ciphertext)
-    {
-        byte[] plaintext = null;
+    public byte[] decryptPreKeyMessage(String peer, String ciphertext) throws InvalidVersionException,
+            InvalidMessageException, InvalidKeyException, DuplicateMessageException, InvalidKeyIdException,
+            UntrustedIdentityException, LegacyMessageException {
 
-        try {
-            plaintext =  sessions.get(peer).getSessionCipher()
-                    .decrypt(new PreKeyWhisperMessage(Base64.decode(ciphertext)));
-        } catch (InvalidMessageException e) {
-            e.printStackTrace();
-        } catch (InvalidVersionException e) {
-            e.printStackTrace();
-        } catch (DuplicateMessageException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (UntrustedIdentityException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyIdException e) {
-            e.printStackTrace();
-        } catch (LegacyMessageException e) {
-            e.printStackTrace();
-        }
+        byte[] plaintext =  sessions.get(peer).getSessionCipher()
+                .decrypt(new PreKeyWhisperMessage(Base64.decode(ciphertext)));;
 
         return plaintext;
     }
 
 
-    public String decrypt(String peer, String ciphertext)
-    {
+    public String decrypt(String peer, String ciphertext) throws UntrustedIdentityException, LegacyMessageException,
+            InvalidVersionException, InvalidMessageException, DuplicateMessageException,
+            InvalidKeyException, InvalidKeyIdException, NoSessionException {
+
         byte[] plaintext = null;
 
         try {
@@ -223,15 +203,9 @@ public class SecureParty
 
         } catch (InvalidMessageException e) {
 
-            //We failed to parse it as WhisperMessage, maybe its PPreKeyWhisperMessage
+            //We failed to parse it as WhisperMessage, maybe its PreKeyWhisperMessage
             plaintext = decryptPreKeyMessage(peer, ciphertext);
 
-        } catch (LegacyMessageException e) {
-            e.printStackTrace();
-        } catch (DuplicateMessageException e) {
-            e.printStackTrace();
-        } catch (NoSessionException e) {
-            e.printStackTrace();
         }
 
         return new String(plaintext);

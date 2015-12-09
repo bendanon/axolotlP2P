@@ -4,13 +4,17 @@ import org.whispersystems.libaxolotl.IdentityKey;
 
 /**
  * Created by ben on 08/12/15.
+ *
+ * General interface for public identity key authentication
+ * made for establishing trust with a peer
+ *
  */
 public interface IIdentityWitness {
 
     /**
-     * Validates the given IdentityKey matches the data of the witness
+     * Authenticates the given IdentityKey matches the data of the witness
      * @param sessionIdentityKey
      * @return
      */
-    boolean validate(IdentityKey sessionIdentityKey);
+    boolean authenticate(IdentityKey sessionIdentityKey);
 }

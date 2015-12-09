@@ -8,7 +8,6 @@ import org.whispersystems.libaxolotl.ecc.ECPublicKey;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -21,88 +20,68 @@ import java.security.cert.CertificateException;
  */
 public class PersistentTrustStore implements ITrustStore{
 
-    private final KeyStore ks;
+    private final KeyStore keyStore;
     private final KeyStore.ProtectionParameter protParam;
     private String ksPassword;
     private String ksPath;
+    private boolean createNewStore;
 
+    public PersistentTrustStore(String path, String password, boolean createNewStore) throws KeyStoreException,
+            CertificateException, NoSuchAlgorithmException, IOException {
 
-    public PersistentTrustStore(String path, String password) throws KeyStoreException {
-
-        this.ks = KeyStore.getInstance("JCEKS");
+        this.keyStore = KeyStore.getInstance("JCEKS");
         this.ksPassword = password;
+        this.createNewStore = createNewStore;
         protParam = new KeyStore.PasswordProtection(ksPassword.toCharArray());
         this.ksPath = path;
         initializeKeyStore();
     }
 
-    private void initializeKeyStore()
-    {
-        java.io.FileInputStream fis = null;
-        try {
-            fis = new java.io.FileInputStream(ksPath);
-            ks.load(fis, ksPassword.toCharArray());
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
+    private void initializeKeyStore() throws IOException, CertificateException, NoSuchAlgorithmException {
 
-            //This means the store does not yet exist, create one
-            try {
-                ks.load(null, ksPassword.toCharArray());
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            } catch (NoSuchAlgorithmException e1) {
-                e1.printStackTrace();
-            } catch (CertificateException e1) {
-                e1.printStackTrace();
-            }
+        if (this.createNewStore) {
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            //Creates a new key store
+            keyStore.load(null, ksPassword.toCharArray());
+
+        } else {
+
+            //Load an existing key store
+            java.io.FileInputStream fis = new java.io.FileInputStream(ksPath);
+            keyStore.load(fis, ksPassword.toCharArray());
+            fis.close();
         }
     }
 
 
     @Override
-    public void setIdentity(IdentityKeyPair pair) {
+    public void setIdentity(IdentityKeyPair pair) throws CertificateException,
+                                                         NoSuchAlgorithmException,
+                                                         KeyStoreException,
+                                                         IOException {
         storeKey("identity", pair.serialize());
     }
 
     @Override
-    public IdentityKeyPair getIdentity() {
+    public IdentityKeyPair getIdentity() throws KeyStoreException,
+            InvalidKeyException, UnrecoverableEntryException, NoSuchAlgorithmException {
 
-        try {
-            if(ks.containsAlias("identity"))
-            {
-                KeyStore.SecretKeyEntry entry =
-                        (KeyStore.SecretKeyEntry)ks.getEntry("identity", protParam);
+        KeyStore.SecretKeyEntry entry =
+                (KeyStore.SecretKeyEntry) keyStore.getEntry("identity", protParam);
 
-                return new IdentityKeyPair(entry.getSecretKey().getEncoded());
-            }
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (UnrecoverableEntryException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
+        if(null == entry)
+        {
+            return null;
         }
-        return null;
+
+        return new IdentityKeyPair(entry.getSecretKey().getEncoded());
     }
 
     @Override
-    public void setTrustedIdentity(String peer, IdentityKey pub) {
+    public void setTrustedIdentity(String peer, IdentityKey pub) throws CertificateException,
+                                                                        NoSuchAlgorithmException,
+                                                                        KeyStoreException,
+                                                                        IOException {
 
         //make sure the peer doesn't insert itself as identity :)
         if(peer.equals("identity")) return;
@@ -111,59 +90,35 @@ public class PersistentTrustStore implements ITrustStore{
     }
 
     @Override
-    public boolean isTrusted(String peer, ECPublicKey pub) throws UntrustedIdentityException{
+    public boolean isTrusted(String peer, ECPublicKey pub) throws UntrustedIdentityException,
+                                                                  KeyStoreException,
+                                                                  UnrecoverableEntryException,
+                                                                  NoSuchAlgorithmException {
 
-        try {
-            if(!ks.containsAlias(peer))
-            {
-                return false;
-            }
-            KeyStore.SecretKeyEntry entry =
-                    (KeyStore.SecretKeyEntry)ks.getEntry(peer, protParam);
+        if(!keyStore.containsAlias(peer))
+        {
+            return false;
+        }
+        KeyStore.SecretKeyEntry entry =
+                (KeyStore.SecretKeyEntry) keyStore.getEntry(peer, protParam);
 
-            if(!java.util.Arrays.equals(pub.serialize(), entry.getSecretKey().getEncoded()))
-            {
-                throw new UntrustedIdentityException(peer, new IdentityKey(pub));
-            }
-
-            return true;
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (UnrecoverableEntryException e) {
-            e.printStackTrace();
+        if(!java.util.Arrays.equals(pub.serialize(), entry.getSecretKey().getEncoded()))
+        {
+            throw new UntrustedIdentityException(peer, new IdentityKey(pub));
         }
 
-        return false;
+        return true;
     }
 
-    private void storeKey(String alias, byte[] serialized)
-    {
-        SecretKey sk = new SecretKeySpec(serialized, "");
-        java.io.FileOutputStream fos = null;
-        try {
-            ks.setEntry(alias , (new KeyStore.SecretKeyEntry(sk)), protParam);
-            fos = new java.io.FileOutputStream(ksPath);
-            ks.store(fos, ksPassword.toCharArray());
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    private void storeKey(String alias, byte[] serialized) throws KeyStoreException,
+                                                                    CertificateException,
+                                                                    NoSuchAlgorithmException,
+                                                                    IOException {
+        SecretKey secretKey = new SecretKeySpec(serialized, "");
+        keyStore.setEntry(alias , (new KeyStore.SecretKeyEntry(secretKey)), protParam);
+
+        java.io.FileOutputStream fos = new java.io.FileOutputStream(ksPath);
+        keyStore.store(fos, ksPassword.toCharArray());
+        fos.close();
     }
 }

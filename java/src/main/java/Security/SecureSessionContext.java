@@ -12,23 +12,14 @@ public class SecureSessionContext {
     private SessionCipher cipher;
     private IdentityKey sessionIdentityKey;
 
-
-    public SecureSessionContext()
-    {
-        cipher = null;
-    }
-
-    public void setSessionCipher(SessionCipher cipher)
+    public SecureSessionContext(SessionCipher cipher, IdentityKey sessionIdentityKey)
     {
         this.cipher = cipher;
-    }
-    public SessionCipher getSessionCipher()
-    {
-        return cipher;
+        this.sessionIdentityKey = sessionIdentityKey;
     }
 
-    public void setSessionIdentityKey(IdentityKey sessionIdentityKey) {
-        this.sessionIdentityKey = sessionIdentityKey;
+    public SessionCipher getSessionCipher() {
+        return cipher;
     }
 
     public IdentityKey getSessionIdentityKey() {

@@ -1,8 +1,10 @@
 package main;
 
+import Security.ChatGroup;
 import Security.FingerprintWG;
 import Security.PersistentTrustStore;
 import Security.SecureParty;//import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.XMPPException;
 import org.whispersystems.libaxolotl.*;
 
 import java.io.IOException;
@@ -87,7 +89,7 @@ public class MainClass {
         }
 
 
-        /*try {
+        try {
             if(party1.consumeIdentityWitness("party2", party2.generateWitness()))
             {
                 System.out.println("party1 now trusts party2");
@@ -100,7 +102,7 @@ public class MainClass {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
 
         try {
             System.out.println(party2.decrypt("party1", party1.encrypt("party2", "Hi party2!")));
@@ -133,8 +135,8 @@ public class MainClass {
         } catch (NoSessionException e) {
             e.printStackTrace();
         }
-        /*
-        String username = "user1";
+
+        /*String username = "user2";
         String password = "crypto";
         XmppManager xmppManager;
         try{
@@ -152,8 +154,8 @@ public class MainClass {
         }
         xmppManager.setStatus(true, "Hello everyone");
 
-        String buddyJID = "user2";
-        String buddyName = "user2";
+        String buddyJID = "user1";
+        String buddyName = "user1";
         try {
             xmppManager.createEntry(buddyJID, buddyName);
         } catch (Exception e) {
@@ -181,7 +183,7 @@ public class MainClass {
             }
         }
 
-        xmppManager.disconnect();
-        */
+        xmppManager.disconnect();*/
+
     }
 }

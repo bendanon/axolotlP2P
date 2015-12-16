@@ -75,7 +75,6 @@ public class MainClass {
             e.printStackTrace();
         }
 
-
         try {
             if(party1.consumeKeyExchangeMessage("party2", party2.createKeyExchangeMessage("party1")))
             {

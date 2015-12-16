@@ -5,6 +5,7 @@ import org.whispersystems.libaxolotl.IdentityKeyPair;
 import org.whispersystems.libaxolotl.InvalidKeyException;
 import org.whispersystems.libaxolotl.UntrustedIdentityException;
 import org.whispersystems.libaxolotl.ecc.ECPublicKey;
+import org.whispersystems.libaxolotl.state.IdentityKeyStore;
 import security.trust.ITrustStore;
 
 import javax.crypto.SecretKey;
@@ -15,6 +16,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.util.Enumeration;
 
 /**
  * Created by ben on 08/12/15.
@@ -54,6 +56,20 @@ public class PersistentTrustStore implements ITrustStore {
         }
     }
 
+
+    @Override
+    public void syncIdentityKeystore(IdentityKeyStore identityKeyStore) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, InvalidKeyException {
+        Enumeration <String> iter = keyStore.aliases();
+        while(iter.hasMoreElements())
+        {
+            String alias = iter.nextElement();
+
+            if(alias.equals("identity")) continue;
+
+            KeyStore.SecretKeyEntry entry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, protParam);
+            identityKeyStore.saveIdentity(alias, new IdentityKey(entry.getSecretKey().getEncoded(), 0));
+        }
+    }
 
     @Override
     public void setIdentity(IdentityKeyPair pair) throws CertificateException,

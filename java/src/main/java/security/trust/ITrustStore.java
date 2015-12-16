@@ -19,8 +19,6 @@ import java.security.cert.CertificateException;
  * 2.All trusted public identity keys of peers
  */
 public interface ITrustStore {
-
-    void syncIdentityKeystore(IdentityKeyStore identityKeyStore) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, InvalidKeyException;
     /**
      * Sets the owner's identity in this store
      * @param pair

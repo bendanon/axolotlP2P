@@ -71,10 +71,7 @@ public class SecureParty
         }
 
         //Create an in-memory Axolotl axolotlStore (non-persistent)
-        AxolotlStore axolotlStore = new InMemoryAxolotlStore(idPair, numericId);
-        trustStore.syncIdentityKeystore(axolotlStore);
-
-        return axolotlStore;
+        return new InMemoryAxolotlStore(idPair, numericId);
     }
 
     private int getSignedPrekeyId()
@@ -181,7 +178,6 @@ public class SecureParty
             return false;
         }
         trustStore.setTrustedIdentity(peer, ctx.getSessionIdentityKey());
-        axolotlStore.saveIdentity(peer, ctx.getSessionIdentityKey());
         return true;
     }
 

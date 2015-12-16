@@ -5,6 +5,7 @@ import org.whispersystems.libaxolotl.IdentityKeyPair;
 import org.whispersystems.libaxolotl.InvalidKeyException;
 import org.whispersystems.libaxolotl.UntrustedIdentityException;
 import org.whispersystems.libaxolotl.ecc.ECPublicKey;
+import org.whispersystems.libaxolotl.state.IdentityKeyStore;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -19,6 +20,7 @@ import java.security.cert.CertificateException;
  */
 public interface ITrustStore {
 
+    void syncIdentityKeystore(IdentityKeyStore identityKeyStore) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, InvalidKeyException;
     /**
      * Sets the owner's identity in this store
      * @param pair

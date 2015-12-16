@@ -29,13 +29,11 @@ import java.util.HashMap;
  */
 public class SecureParty
 {
-    //Similar for all sessions
     private String email;
     private int numericId;
-    private IdentityKeyPair identityKeyPair;
     private ECKeyPair signedPair;
     private byte[] signedPreKeySignature;
-    private AxolotlStore store;
+    private AxolotlStore axolotlStore;
     private ITrustStore trustStore;
     private IWitnessGenerator witnessGenerator;
 
@@ -55,7 +53,7 @@ public class SecureParty
 
     public IIdentityWitness generateWitness()
     {
-        return witnessGenerator.generateWitness(identityKeyPair.getPublicKey());
+        return witnessGenerator.generateWitness(axolotlStore.getIdentityKeyPair().getPublicKey());
     }
 
     private AxolotlStore generateKeyStore(String email) throws CertificateException, NoSuchAlgorithmException,
@@ -72,8 +70,11 @@ public class SecureParty
             trustStore.setIdentity(idPair);
         }
 
-        //Create an in-memory Axolotl store (non-persistent)
-        return new InMemoryAxolotlStore(idPair, numericId);
+        //Create an in-memory Axolotl axolotlStore (non-persistent)
+        AxolotlStore axolotlStore = new InMemoryAxolotlStore(idPair, numericId);
+        trustStore.syncIdentityKeystore(axolotlStore);
+
+        return axolotlStore;
     }
 
     private int getSignedPrekeyId()
@@ -84,22 +85,20 @@ public class SecureParty
     private void initializeAxolotlStore(String email) throws CertificateException, InvalidKeyException,
             NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, IOException {
 
-        store = generateKeyStore(email);
-
-        //Load the identity key pair from the store
-        identityKeyPair = store.getIdentityKeyPair();
+        axolotlStore = generateKeyStore(email);
 
         //generate a signed prekey pair
         signedPair = Curve.generateKeyPair();
 
         //Sign the signed prekey
-        signedPreKeySignature = Curve.calculateSignature(identityKeyPair.getPrivateKey(),
+        signedPreKeySignature = Curve.calculateSignature(axolotlStore.getIdentityKeyPair().getPrivateKey(),
                 signedPair.getPublicKey().serialize());
 
         //Store the signed prekey
         SignedPreKeyRecord record = new SignedPreKeyRecord(getSignedPrekeyId(),
                 0, signedPair, signedPreKeySignature);
-        store.storeSignedPreKey(getSignedPrekeyId(), record);
+        axolotlStore.storeSignedPreKey(getSignedPrekeyId(), record);
+
     }
 
     public String createKeyExchangeMessage(String peer)
@@ -112,14 +111,14 @@ public class SecureParty
         PreKeyRecord record = new PreKeyRecord(prekeyId, ephemeralPair);
 
         // remove the old prekey in case we already had a conversation
-        store.removePreKey(prekeyId);
+        axolotlStore.removePreKey(prekeyId);
 
         //Store the new prekey
-        store.storePreKey(prekeyId, record);
+        axolotlStore.storePreKey(prekeyId, record);
 
         return KeyExchangeUtil.serialize(new PreKeyBundle(numericId, numericId, prekeyId,
                 ephemeralPair.getPublicKey(), getSignedPrekeyId(), signedPair.getPublicKey(),
-                signedPreKeySignature, identityKeyPair.getPublicKey()));
+                signedPreKeySignature, axolotlStore.getIdentityKeyPair().getPublicKey()));
     }
 
     public boolean isSessionInitialized(String peer)
@@ -135,22 +134,24 @@ public class SecureParty
     public boolean consumeKeyExchangeMessage(String peer, String keyExchangeMessage) throws UnrecoverableEntryException,
             NoSuchAlgorithmException, KeyStoreException, UntrustedIdentityException, InvalidKeyException {
 
+        //Create a session builder
+        AxolotlAddress remoteAddress = new AxolotlAddress(peer, peer.hashCode());
+        SessionBuilder builder = new SessionBuilder(axolotlStore, remoteAddress);
+
+        //Process the counterpart prekey
+        PreKeyBundle bundle = KeyExchangeUtil.deserialize(keyExchangeMessage);
+        builder.process(bundle);
+        SecureSessionContext ctx = new SecureSessionContext(new SessionCipher(axolotlStore, remoteAddress),
+                bundle.getIdentityKey());
+
         if(isSessionInitialized(peer))
         {
             //Remove old session
             sessions.remove(peer);
         }
 
-        //Create a session builder
-        AxolotlAddress remoteAddress = new AxolotlAddress(peer, peer.hashCode());
-        SessionBuilder builder = new SessionBuilder(store, remoteAddress);
-
-        //Process the counterpart prekey
-        PreKeyBundle bundle = KeyExchangeUtil.deserialize(keyExchangeMessage);
-        builder.process(bundle);
-        SecureSessionContext ctx = new SecureSessionContext(new SessionCipher(store, remoteAddress),
-                bundle.getIdentityKey());
         sessions.put(peer,ctx);
+
 
         //Check if the peer is trusted
         if(trustStore.isTrusted(peer,bundle.getIdentityKey().getPublicKey()))
@@ -180,6 +181,7 @@ public class SecureParty
             return false;
         }
         trustStore.setTrustedIdentity(peer, ctx.getSessionIdentityKey());
+        axolotlStore.saveIdentity(peer, ctx.getSessionIdentityKey());
         return true;
     }
 

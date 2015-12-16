@@ -16,6 +16,14 @@ public class KeyExchangeUtil {
     static final int SIGNATURE_SIZE = 64;
     static final int SERIALIZED_EC_PUBLIC_SIZE = 33;
 
+    /**
+     * Serializes the PreKeyBundle into a base64 encoded string that can
+     * be sent through the net (does not contain secrets). Later, the peer
+     * would be able to deserialize this bundle using KeyExhangeUtil.deserialize
+     *
+     * @param bundle
+     * @return
+     */
     public static String serialize(PreKeyBundle bundle)
     {
         ByteBuffer byteBuffer = ByteBuffer.allocate(KEY_EXCH_MSG_SIZE);
@@ -39,6 +47,13 @@ public class KeyExchangeUtil {
         return Base64.encodeBytes(byteBuffer.array());
     }
 
+    /**
+     * Creates a PreKeyBundle from a base46 serialized buffer
+     * created by the KeyExchangeUtil.serialize function
+     *
+     * @param base64SerializedBundle
+     * @return
+     */
     public static PreKeyBundle deserialize(String base64SerializedBundle)
     {
         ByteBuffer byteBuffer = ByteBuffer.wrap(Base64.decode(base64SerializedBundle));
@@ -64,6 +79,11 @@ public class KeyExchangeUtil {
                    signedPreKeyId,signedPreKeyPublic,signedPreKeySignature,identityKey);
     }
 
+    /**
+     * Extracts an ECPublicKey from byteBuffer
+     * @param byteBuffer
+     * @return
+     */
     private static ECPublicKey getECPublicKey(ByteBuffer byteBuffer)
     {
         ECPublicKey preKeyPublic = null;
@@ -77,6 +97,12 @@ public class KeyExchangeUtil {
         return preKeyPublic;
     }
 
+    /**
+     * Extracts an IdentityKey from byteBuffer
+     *
+     * @param byteBuffer
+     * @return
+     */
     private static IdentityKey getIdentityKey(ByteBuffer byteBuffer)
     {
         IdentityKey identityKey = null;

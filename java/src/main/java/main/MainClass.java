@@ -1,5 +1,7 @@
 package main;
 
+import ChatCommons.INotifier;
+import org.jivesoftware.smack.XMPPException;
 import org.whispersystems.libaxolotl.*;
 import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
@@ -19,12 +21,14 @@ import java.security.cert.CertificateException;
 public class MainClass {
     public static void main(String[] args)
     {
+        /*
+
         SecureParty party1 = null;
         SecureParty party2 = null;
         SecureParty party3 = null;
 
         //Put any path here, just make sure the user running the app has read/write perms
-        String ksPath = "/home/ben/Desktop/keystore";
+        String ksPath = "C:\\Users\\Guy\\KeyStore";
 
         PersistentTrustStore store1 = null;
         PersistentTrustStore store2 = null;
@@ -73,7 +77,7 @@ public class MainClass {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+    }
 
 
         try {
@@ -148,11 +152,15 @@ public class MainClass {
             e.printStackTrace();
         }
 
-        /*String username = "user2";
+        */
+
+        String username = "user2";
         String password = "crypto";
+
         XmppManager xmppManager;
+
         try{
-            xmppManager = XmppManager.createManager();
+            xmppManager = XmppManager.createManager("guy-pc");
         }
         catch (XMPPException e) {
             System.out.println("System Error");
@@ -169,13 +177,13 @@ public class MainClass {
         String buddyJID = "user1";
         String buddyName = "user1";
         try {
-            xmppManager.createEntry(buddyJID, buddyName);
+            xmppManager.setChat(buddyJID, buddyName);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
-            xmppManager.sendMessage("Hello mate", "user2@ben-probook");
+            xmppManager.sendMessage("Hello mate", "user1");
         } catch (XMPPException e) {
             e.printStackTrace();
         }
@@ -189,13 +197,13 @@ public class MainClass {
                 e.printStackTrace();
             }
             try {
-                xmppManager.sendMessage("Hello mate", "user2@ben-probook");
+                xmppManager.sendMessage("Hello mate", "user1");
             } catch (XMPPException e) {
                 e.printStackTrace();
             }
         }
 
-        xmppManager.disconnect();*/
+        xmppManager.disconnect();
 
     }
 }

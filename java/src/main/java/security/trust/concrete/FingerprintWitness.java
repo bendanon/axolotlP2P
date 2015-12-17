@@ -1,5 +1,6 @@
 package security.trust.concrete;
 
+import org.jivesoftware.smack.util.Base64;
 import org.whispersystems.libaxolotl.IdentityKey;
 import security.trust.IIdentityWitness;
 
@@ -22,5 +23,10 @@ public class FingerprintWitness implements IIdentityWitness {
     @Override
     public boolean authenticate(IdentityKey sessionIdentityKey) {
         return fingerprint.equals(sessionIdentityKey.getFingerprint());
+    }
+
+    @Override
+    public String serialize() {
+        return fingerprint;
     }
 }

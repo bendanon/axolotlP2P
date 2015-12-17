@@ -51,6 +51,11 @@ public class SecureParty
         initializeAxolotlStore(email);
     }
 
+    /**
+     * Creates an IIdentityWitness using the generator supplied at creation.
+     *
+     * @return
+     */
     public IIdentityWitness generateWitness()
     {
         return witnessGenerator.generateWitness(axolotlStore.getIdentityKeyPair().getPublicKey());
@@ -72,6 +77,18 @@ public class SecureParty
 
         //Create an in-memory Axolotl axolotlStore (non-persistent)
         return new InMemoryAxolotlStore(idPair, numericId);
+    }
+
+    /**
+     * Removes the peer entry from the trust store.
+     * call this when peer notified you he lost his private key.
+     *
+     * IMPORTANT - This method does not end the current session if one exists!
+     * call endSessionWithPeer for that!
+     * @param peer
+     */
+    public void revokeTrustedIdentity(String peer) throws KeyStoreException {
+        trustStore.RevokeTrustedIdentity(peer);
     }
 
     private int getSignedPrekeyId()
@@ -118,8 +135,20 @@ public class SecureParty
                 signedPreKeySignature, axolotlStore.getIdentityKeyPair().getPublicKey()));
     }
 
+    /**
+     * Ends the current session peer.
+     * @param peer
+     */
+    public void endSessionWithPeer(String peer)
+    {
+        if(isSessionInitialized(peer))
+        {
+            sessions.remove(peer);
+        }
+    }
+
     public boolean isSessionInitialized(String peer)
-    {   return null != sessions.get(peer);  }
+    {   return sessions.containsKey(peer);  }
 
     /**
      * Builds a secure session with peer, based on a key

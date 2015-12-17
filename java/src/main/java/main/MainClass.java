@@ -1,10 +1,9 @@
 package main;
 
-import ChatCommons.INotifier;
-import org.jivesoftware.smack.XMPPException;
 import org.whispersystems.libaxolotl.*;
 import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
+import security.trust.concrete.FingerprintWitness;
 import security.trust.concrete.PersistentTrustStore;
 
 import java.io.IOException;
@@ -70,6 +69,12 @@ public class MainClass {
             e.printStackTrace();
     }
 
+        /*try {
+            party1.revokeTrustedIdentity("party2");
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        }*/
+
         try {
             if(party1.consumeKeyExchangeMessage("party2", party2.createKeyExchangeMessage("party1")))
             {
@@ -94,9 +99,11 @@ public class MainClass {
             e.printStackTrace();
         }
 
-
         try {
-            if(party1.consumeIdentityWitness("party2", party2.generateWitness()))
+            System.out.println(party2.generateWitness().serialize());
+
+            if(party1.consumeIdentityWitness("party2",
+                    new FingerprintWitness(party2.generateWitness().serialize())))
             {
                 System.out.println("party1 now trusts party2");
             }

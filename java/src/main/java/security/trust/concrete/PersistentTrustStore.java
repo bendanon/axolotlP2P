@@ -92,6 +92,14 @@ public class PersistentTrustStore implements ITrustStore {
     }
 
     @Override
+    public void RevokeTrustedIdentity(String peer) throws KeyStoreException {
+        if(keyStore.containsAlias(peer))
+        {
+            keyStore.deleteEntry(peer);
+        }
+    }
+
+    @Override
     public boolean isTrusted(String peer, ECPublicKey pub) throws UntrustedIdentityException,
                                                                   KeyStoreException,
                                                                   UnrecoverableEntryException,

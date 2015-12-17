@@ -43,6 +43,13 @@ public interface ITrustStore {
     void setTrustedIdentity(String peer, IdentityKey pub) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException;
 
     /**
+     * Meant to be used in case peer notifies the user that his device was stolen /
+     * private identity key lost. Calling this removed the peer from trust store
+     *
+     * @param peer
+     */
+    void RevokeTrustedIdentity(String peer) throws KeyStoreException;
+    /**
      * Check if peer is trusted with this public key
      *
      * @param peer - The peer in question

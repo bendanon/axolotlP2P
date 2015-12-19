@@ -1,13 +1,10 @@
 package main;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
-import ChatCommons.*;
+
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SmackConfiguration;
@@ -16,14 +13,15 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 //import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.packet.Presence.Type;
+import ChatCommons.ICommManager;
 
-import java.util.HashMap;
+import ChatCommons.INotifier;
+public class XmppManager implements ICommManager {
 
-public class XmppManager implements ICommManager
-{
-	private static final int packetReplyTimeout = 500; // millis
 
+	private static final int packetReplyTimeout = 500; // ms
 	private final int PORT = 5222;
 	private String server;
 	private int port;
@@ -38,26 +36,28 @@ public class XmppManager implements ICommManager
 
 
 
-	public void getBuddyList(){
-		System.out.println(String.format("getting buddy list"));
+	public void getBuddiesStats(){
+		System.out.println(String.format("getting buddy list..."));
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		Roster roster = connection.getRoster();
 		Collection<RosterEntry> entries = roster.getEntries();
-
-
-
-		System.out.println("\n\n" + entries.size() + " buddy(ies):");
+		System.out.println("There are " + entries.size() + " buddy(ies):");
+		String user;
+		Presence presence;
 		for(RosterEntry r:entries)
 		{
-			System.out.println("presence :" + roster.getPresenceResource(r.getUser()));
-			System.out.println("status : "+r.getStatus());
+			user = r.getUser();
+			presence = roster.getPresence(user);
+			System.out.println("user: "+user);
 			System.out.println("name: "+r.getName());
-
+			System.out.println("status :" + presence.getStatus());
+			System.out.println("mode :" + presence.getMode());
+			System.out.println("type :" + presence.getType());
 		}
 
 	}
@@ -100,7 +100,8 @@ public class XmppManager implements ICommManager
 
 		SmackConfiguration.setPacketReplyTimeout(packetReplyTimeout);
 
-		config = new ConnectionConfiguration(server, port);
+		//config = new ConnectionConfiguration(server, port);
+		config = new ConnectionConfiguration("Dell", port);
 		config.setSASLAuthenticationEnabled(false);
 		config.setSecurityMode(SecurityMode.disabled);
 
@@ -111,8 +112,8 @@ public class XmppManager implements ICommManager
 
 		chatManager = connection.getChatManager();
 		setMessageReciver();
-	}
 
+	}
 	private void setMessageReciver(){
 		messageListener = XmppMessageListener.createXmppMessageListener();
 		createMessageListenerThread();
@@ -125,11 +126,12 @@ public class XmppManager implements ICommManager
 		}
 	}
 
-	public void setStatus(boolean available, String status) {
+	public void setStatus(boolean available, String status,Mode mode) {
 
 		Presence.Type type = available? Type.available: Type.unavailable;
 		Presence presence = new Presence(type);
 		presence.setStatus(status);
+		presence.setMode(mode);
 		connection.sendPacket(presence);
 
 	}
@@ -143,30 +145,38 @@ public class XmppManager implements ICommManager
 				try {
 					roster.removeEntry(r);
 				} catch (XMPPException e) {
-					// TODO Auto-generated catch block
+					System.out.println("error in removing entry from roster");
 					e.printStackTrace();
 				}
 			}
 			connection.disconnect();
 		}
 	}
-	public void setChat(String buddyJID, String name) throws XMPPException {
-		// System.out.println(String.format("Sending message '%1$s' to user %2$s", message, buddyJID));
+	public void connectToFriend(String buddyName) throws XMPPException {
+		String buddyJID = buddyName.concat("@".concat(server));
 		if(!ChatMap.containsKey(buddyJID)){
 			Chat chat = chatManager.createChat(buddyJID, messageListener);
 			ChatMap.put(buddyJID, chat);
-			System.out.println(String.format("Creating entry for buddy '%1$s' with name %2$s", buddyJID, name));
+			System.out.println(String.format("Creating entry for buddy '%1$s' with name %2$s", buddyJID, buddyName));
 			Roster roster = connection.getRoster();
-			roster.createEntry(buddyJID, name, null);
+			roster.createEntry(buddyJID, buddyName, null);
 		}
 	}
-	public void sendMessage(String message, String buddyJID) throws XMPPException {
+	public void sendMessage(String message, String buddyName, boolean isKeyMessage) throws XMPPException {
+		String buddyJID = buddyName.concat("@".concat(server));
 		System.out.println(String.format("trying to send mesage '%1$s' to user %2$s", message, buddyJID));
 		Chat chat = ChatMap.get(buddyJID);
 		if(chat == null){
 			System.out.println(String.format("cant find the requested chat"));
 		}
 		else{
+			if(isKeyMessage == true){
+				message = XmppMessageListener.IS_KEY_MESSAGE.concat("@".concat((message)));
+			}
+			else{
+				message = XmppMessageListener.NOT_KEY_MESSAGE.concat("@".concat((message)));
+			}
+
 			chat.sendMessage(message);
 			System.out.println(String.format("message sent"));
 		}

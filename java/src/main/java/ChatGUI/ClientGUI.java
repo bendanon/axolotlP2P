@@ -49,7 +49,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		super("Chat Client");
 		defaultPort = port;
 		defaultHost = host;
-		
+
 		// The NorthPanel with:
 		JPanel northPanel = new JPanel(new GridLayout(4,1));
 		// the server name anmd the port number
@@ -135,7 +135,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 
 	}
 
-	// called by the Client to append text in the TextArea 
+	// called by the Client to append text in the TextArea
 	void append(String str) {
 		ta.append(str);
 		ta.setCaretPosition(ta.getText().length() - 1);
@@ -158,10 +158,11 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		tf.removeActionListener(this);
 		connected = false;
 	}
-		
+
 	/*
 	* Button or JTextField clicked
 	*/
+
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 		// if it is the Logout button
@@ -182,9 +183,12 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 
 			try
 			{
-				String sendTo = lstUsers.getSelectedValue() + "@guy-pc";
+				String sendTo = lstUsers.getSelectedValue();
 
-				xmppManager.sendMessage(tf.getText(), sendTo);
+				xmppManager.sendMessage(tf.getText(), sendTo, true);
+				Thread.sleep(100);
+				xmppManager.sendMessage(tf.getText(), sendTo, false);
+
 				SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 				append(dateFormat.format(new Date()) + " " + tfUser.getText() +": " + tf.getText() +"\n");
 			}
@@ -227,9 +231,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 			}
 
 			// try creating a new Client with GUI
-		//	client = new Client(server, port, username, this);
+			//	client = new Client(server, port, username, this);
 			// test if we can start the Client
-		//	if (!client.start())
+			//	if (!client.start())
 			//	return;
 			tf.setText("");
 			label.setText("Enter your message below");
@@ -256,7 +260,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 	private void OpenXMPPConnection(String userName, String password)
 	{
 		try{
-			xmppManager = XmppManager.createManager("guy-pc");
+			xmppManager = XmppManager.createManager(tfServer.getText());
 
 			xmppManager.addNotifier(this);
 		}
@@ -272,11 +276,11 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 
 			if (userName.equals("user1"))
 			{
-				xmppManager.setChat("user2@guy-pc","user2");
+				xmppManager.connectToFriend("user2");
 			}
 			else
 			{
-				xmppManager.setChat("user1@guy-pc","user1");
+				xmppManager.connectToFriend("user1");
 			}
 
 		} catch (XMPPException e) {
@@ -289,14 +293,21 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 	// to start the whole thing the server
 	public static void main(String[] args)
 	{
-		new ClientGUI("localhost", 1500);
+		new ClientGUI("dell", 5222);
 	}
 
 
-	public void RecieveMessage(String from, String Message)
+	public void RecieveMessage(String from, String Message,boolean isKeyMessage)
 	{
-		from = from.split("@")[0];
-		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-		append(dateFormat.format(new Date()) + " " + from +": " + Message + "\n");
+		if(isKeyMessage == false) {
+			from = from.split("@")[0];
+			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+			append(dateFormat.format(new Date()) + " " + from + ": " + Message + "\n");
+		}
+		else{
+			from = from.split("@")[0];
+			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+			append(dateFormat.format(new Date()) + "received key message " + from + ": " + Message + "\n");
+		}
 	}
 }

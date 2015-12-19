@@ -25,7 +25,7 @@ public class ListenerThread extends Thread {
                     messageListener.wait();
                     System.out.println(String.format("MESSAGE ARRIVED"));
                     for(INotifier notifier : listOfNotifiers){
-                        notifier.RecieveMessage(messageListener.getLastMessageSender(), messageListener.getLastMessage(),messageListener.getMessageType());
+                        notifier.ReceiveMessage(messageListener.getLastMessageSender(), messageListener.getLastMessage(),messageListener.getMessageType());
                     }
                     messageListener.printLastMessage();
                 }

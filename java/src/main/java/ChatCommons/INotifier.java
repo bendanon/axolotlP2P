@@ -5,6 +5,6 @@ package ChatCommons;
  */
 public interface INotifier
 {
-    void RecieveMessage(String from, String Message, boolean isKeyMessage);
+    void ReceiveMessage(String from, String Message, boolean isKeyMessage);
 }
 

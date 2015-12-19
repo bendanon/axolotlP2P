@@ -2,56 +2,55 @@ package ChatGUI;
 
 import ChatCommons.INotifier;
 import main.XmppManager;
-import main.XmppMessageListener;
 import org.jivesoftware.smack.XMPPException;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import  java.util.Date;
 import java.text.SimpleDateFormat;
+import org.whispersystems.libaxolotl.*;
+import security.management.SecureParty;
+import security.trust.concrete.FingerprintWG;
+import security.trust.concrete.FingerprintWitness;
+import security.trust.concrete.PersistentTrustStore;
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
+
 
 /**
  * Created by Guy on 12/12/2015.
  */
-public class ClientGUI extends JFrame implements ActionListener, INotifier {
-
-	private static final long serialVersionUID = 1L;
-	// "Enter message"
+public class ClientGUI extends JFrame implements ActionListener, INotifier
+{
 	private JLabel label;
-	// to hold the Username and later on the messages
-	private JTextField tf;
-
-	// to hold the server address an the port number
+	private JLabel labelKS;
+	private JTextField tfMessage;
 	private JTextField tfServer, tfPort;
-
-	// to hold Password
 	private JPasswordField tfPassword;
 	private JTextField tfUser;
-
-	// to Logout and get the list of the users
 	private JButton login, logout, whoIsIn;
-	// for the chat room
 	private JTextArea ta;
-	// if it is for connection
 	private boolean connected;
-	// the default port number
 	private int defaultPort;
 	private String defaultHost;
-
 	private JList<String> lstUsers;
-
 	private XmppManager xmppManager;
+	private JTextField tfFingerPrint;
+	private SecureParty party1 = null;
+	private JTextField tfPathKS;
+	private PersistentTrustStore store1 = null;
 
-	// Constructor connection receiving a socket number
-	ClientGUI(String host, int port) {
-
+	ClientGUI(String host, int port)
+	{
 		super("Chat Client");
 		defaultPort = port;
 		defaultHost = host;
 
 		// The NorthPanel with:
-		JPanel northPanel = new JPanel(new GridLayout(4,1));
+		JPanel northPanel = new JPanel(new GridLayout(6,1));
 		// the server name anmd the port number
 		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
 		// the two JTextField with default value for server address and port number
@@ -65,8 +64,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		serverAndPort.add(tfPort);
 		serverAndPort.add(new JLabel(""));
 
-		// User name and password
-
 		JPanel userAndPasswordPanel = new JPanel(new GridLayout(1,5,1,3));
 		// the two JTextField with default value for server address and port number
 		tfUser = new JTextField("user1");
@@ -79,33 +76,28 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		userAndPasswordPanel.add(tfPassword);
 		userAndPasswordPanel.add(new JLabel(""));
 
-		// adds the Server an port field to the GUI
 		northPanel.add(serverAndPort);
-
 		northPanel.add(userAndPasswordPanel);
 
-		// the Label and the TextField
+		labelKS = new JLabel("Enter your key store path directory", SwingConstants.CENTER);
+		northPanel.add(labelKS);
+		tfPathKS = new JTextField("C:\\ks");
+		northPanel.add(tfPathKS);
+
 		label = new JLabel("Login and then Enter your message below", SwingConstants.CENTER);
 		northPanel.add(label);
 
-		tf = new JTextField("");
-		tf.setEnabled(false);
-		tf.setBackground(Color.WHITE);
-		northPanel.add(tf);
+		tfMessage = new JTextField("");
+		tfMessage.setEnabled(false);
+		tfMessage.setBackground(Color.WHITE);
+		northPanel.add(tfMessage);
 
 		add(northPanel, BorderLayout.NORTH);
 
 		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
 		JPanel centerPanel = new JPanel(new GridLayout(1,2));
 
-		String	listUsers[] =
-				{
-						"user1",
-						"user2",
-						"user3",
-				};
-
-		lstUsers = new JList<>(listUsers);
+		lstUsers = GetFriendsList();
 
 		centerPanel.add(lstUsers);
 		centerPanel.add(new JScrollPane(ta));
@@ -117,22 +109,32 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		login.addActionListener(this);
 		logout = new JButton("Logout");
 		logout.addActionListener(this);
-		logout.setEnabled(false);		// you have to login before being able to logout
+		logout.setEnabled(false);
 		whoIsIn = new JButton("Witness");
 		whoIsIn.addActionListener(this);
-		whoIsIn.setEnabled(false);		// you have to login before being able to Who is in
+		whoIsIn.setEnabled(false);
 
-		JPanel southPanel = new JPanel();
-		southPanel.add(login);
-		southPanel.add(logout);
-		southPanel.add(whoIsIn);
+		tfFingerPrint = new JTextField("Your Finger Print...");
+		tfFingerPrint.setEditable(false);
+		tfFingerPrint.setBackground(Color.WHITE);
+		JPanel southPanel = new JPanel(new GridLayout(2,2));
+		JPanel buttonPanel = new JPanel(new GridLayout(1,3));
+
+		buttonPanel.add(login);
+		buttonPanel.add(logout);
+		buttonPanel.add(whoIsIn);
+
+		southPanel.add(tfFingerPrint);
+		southPanel.add(buttonPanel);
+
 		add(southPanel, BorderLayout.SOUTH);
+
+	//	add(southPanel2,BorderLayout.SOUTH);
 
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(600, 600);
 		setVisible(true);
-		tf.requestFocus();
-
+		tfMessage.requestFocus();
 	}
 
 	// called by the Client to append text in the TextArea
@@ -140,14 +142,13 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		ta.append(str);
 		ta.setCaretPosition(ta.getText().length() - 1);
 	}
+
 	// called by the GUI is the connection failed
 	// we reset our buttons, label, textfield
 	void connectionFailed() {
 		login.setEnabled(true);
 		logout.setEnabled(false);
 		whoIsIn.setEnabled(false);
-		label.setText("Enter your username below");
-		tf.setText("Anonymous");
 		// reset port number and host name as a construction time
 		tfPort.setText("" + defaultPort);
 		tfServer.setText(defaultHost);
@@ -155,158 +156,185 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		tfServer.setEditable(false);
 		tfPort.setEditable(false);
 		// don't react to a <CR> after the username
-		tf.removeActionListener(this);
+		tfMessage.removeActionListener(this);
 		connected = false;
 	}
 
-	/*
-	* Button or JTextField clicked
-	*/
+	private JList GetFriendsList()
+	{
+		String	listUsers[] =
+				{
+						"user1",
+						"user2",
+						"user3",
+				};
+
+		return new JList<>(listUsers);
+	}
+
+	private void Logout()
+	{
+		xmppManager.disconnect();
+	}
 
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
-		// if it is the Logout button
-		if (o == logout) {
-			xmppManager.disconnect();
-			return;
-		}
-		// if it the who is in button
-		if (o == whoIsIn) {
-			//client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
-			return;
-		}
 
-		// ok it is coming from the JTextField
-		if (connected) {
-			// just have to send the message
-			//client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, tf.getText()));
-
+		if (o == login)
+		{
+			Login();
+		}
+		else if (o == logout)
+		{
+			Logout();
+		}
+		else if (o == whoIsIn)
+		{
+			//Todo: implement fingerprint
+		}
+		else if (connected)  // Send msg
+		{
 			try
 			{
 				String sendTo = lstUsers.getSelectedValue();
 
-				xmppManager.sendMessage(tf.getText(), sendTo, true);
+				xmppManager.sendMessage(tfMessage.getText(), sendTo, true);
 				Thread.sleep(100);
-				xmppManager.sendMessage(tf.getText(), sendTo, false);
+				xmppManager.sendMessage(tfMessage.getText(), sendTo, false);
 
 				SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-				append(dateFormat.format(new Date()) + " " + tfUser.getText() +": " + tf.getText() +"\n");
-			}
-			catch (XMPPException ex)
+				append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
+			} catch (XMPPException ex)
 			{
 				System.out.println("System Error");
 				ex.printStackTrace();
 				return;
-			}
-			catch (Exception ex)
-			{
+			} catch (Exception ex) {
 				System.out.println("System Error");
 				ex.printStackTrace();
 				return;
 			}
 
-			tf.setText("");
+			tfMessage.setText("");
 			return;
 		}
+	}
 
-		if (o == login) {
-			// ok it is a connection request
-			String username = tfUser.getText().trim();
-			// empty username ignore it
-			if (username.length() == 0)
-				return;
-			// empty serverAddress ignore it
-			String server = tfServer.getText().trim();
-			if (server.length() == 0)
-				return;
-			// empty or invalid port numer, ignore it
-			String portNumber = tfPort.getText().trim();
-			if (portNumber.length() == 0)
-				return;
-			int port = 0;
-			try {
-				port = Integer.parseInt(portNumber);
-			} catch (Exception en) {
-				return;   // nothing I can do if port number is not valid
-			}
+	private void Login()
+	{
+		ChangeGUIWhenLoginPressed();
 
-			// try creating a new Client with GUI
-			//	client = new Client(server, port, username, this);
-			// test if we can start the Client
-			//	if (!client.start())
-			//	return;
-			tf.setText("");
-			label.setText("Enter your message below");
-			tf.setEnabled(true);
-			connected = true;
+		String userName = tfUser.getText().trim();
+		OpenXMPPConnection(userName,
+				  			new String(tfPassword.getPassword()));
 
-			// disable login button
-			login.setEnabled(false);
-			// enable the 2 buttons
-			logout.setEnabled(true);
-			whoIsIn.setEnabled(true);
-			// disable the Server and Port JTextField
-			tfServer.setEditable(false);
-			tfPort.setEditable(false);
-			tfUser.setEditable(false);
-			tfPassword.setEditable(false);
-			// Action listener for when the user enter a message
-			tf.addActionListener(this);
-
-			OpenXMPPConnection(username, new String(tfPassword.getPassword()));
+		try {
+			store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", false);
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+		} catch (CertificateException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
+		try {
+			party1 = new SecureParty(userName, store1, new FingerprintWG());
+		} catch (CertificateException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+		} catch (UnrecoverableEntryException e) {
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		tfFingerPrint.setText(party1.generateWitness().serialize());
+	}
+
+	private void ChangeGUIWhenLoginPressed()
+	{
+		/*
+		String portNumber = tfPort.getText().trim();
+		try {
+			int port = Integer.parseInt(portNumber);
+			//TODO: Send the port from the GUI to XmppManager
+		} catch (Exception en) {
+			return;
+		}*/
+
+		tfMessage.setText("");
+		label.setText("Enter your message below");
+		tfMessage.setEnabled(true);
+		connected = true;
+
+		login.setEnabled(false);
+		logout.setEnabled(true);
+		whoIsIn.setEnabled(true);
+		tfServer.setEditable(false);
+		tfPort.setEditable(false);
+		tfUser.setEditable(false);
+		tfPassword.setEditable(false);
+		tfPathKS.setEditable(false);
+
+		tfMessage.addActionListener(this);
 	}
 
 	private void OpenXMPPConnection(String userName, String password)
 	{
-		try{
+		try
+		{
 			xmppManager = XmppManager.createManager(tfServer.getText());
-
 			xmppManager.addNotifier(this);
-		}
-		catch (XMPPException e) {
-			System.out.println("System Error");
-			e.printStackTrace();
-			return;
-		}
-		try {
 			xmppManager.userLogin(userName, password);
 
-			System.out.println("User Name is: " + userName);
+			System.out.println("Connected User Name is: " + userName);
 
-			if (userName.equals("user1"))
-			{
-				xmppManager.connectToFriend("user2");
-			}
-			else
-			{
-				xmppManager.connectToFriend("user1");
-			}
+			ConnectedWithFriends(userName);
 
-		} catch (XMPPException e) {
-			e.printStackTrace();
 		}
-
-
+		catch (XMPPException e)
+		{
+			e.printStackTrace();
+			connectionFailed();
+		}
 	}
 
-	// to start the whole thing the server
+	private void ConnectedWithFriends(String userName) throws XMPPException
+	{
+		if (userName.equals("user1"))
+		{
+			xmppManager.connectToFriend("user2");
+		}
+		else
+		{
+			xmppManager.connectToFriend("user1");
+		}
+	}
+
 	public static void main(String[] args)
 	{
 		new ClientGUI("dell", 5222);
 	}
 
-
-	public void RecieveMessage(String from, String Message,boolean isKeyMessage)
+	public void ReceiveMessage(String from, String Message, boolean isKeyMessage)
 	{
-		if(isKeyMessage == false) {
-			from = from.split("@")[0];
-			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		from = from.split("@")[0];
+		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+
+		if (!isKeyMessage)
+		{
 			append(dateFormat.format(new Date()) + " " + from + ": " + Message + "\n");
 		}
-		else{
-			from = from.split("@")[0];
-			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		else
+		{
 			append(dateFormat.format(new Date()) + "received key message " + from + ": " + Message + "\n");
 		}
 	}

@@ -170,7 +170,7 @@ public class XmppManager implements ICommManager {
         if(chat == null){
         	System.out.println(String.format("cant find the requested chat"));
         }
-        else{
+        else{//git
 			switch(keyType){
 				case eKEY_FINISHED:
 					message = XmppMessageListener.KEY_FINISHED_MESSAGE.concat("@".concat((message)));

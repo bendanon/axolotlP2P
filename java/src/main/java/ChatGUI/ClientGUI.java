@@ -1,6 +1,8 @@
 package ChatGUI;
 
 import ChatCommons.INotifier;
+import ChatCommons.User;
+import ChatCommons.eUserStatus;
 import main.XmppManager;
 import org.jivesoftware.smack.XMPPException;
 import javax.swing.*;
@@ -38,6 +40,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 	private int defaultPort;
 	private String defaultHost;
 	private JList<String> lstUsers;
+	private JList<User> listOfUsers;
 	private XmppManager xmppManager;
 	private JTextField tfFingerPrint;
 	private SecureParty party1 = null;
@@ -98,9 +101,25 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
 		JPanel centerPanel = new JPanel(new GridLayout(1,2));
 
+		User user1 = new User("user1", eUserStatus.Offline);
+		User user2 = new User("user1", eUserStatus.Trusted);
+		User user3 = new User("user1", eUserStatus.Wait);
+		User user4 = new User("user1", eUserStatus.UnTrusted);
+
+		//
+		DefaultListModel<User> listModel = new DefaultListModel<>();
+		listModel.addElement(user1);
+		listModel.addElement(user2);
+		listModel.addElement(user3);
+		listModel.addElement(user4);
+
+		listOfUsers = new JList<>(listModel);
+		centerPanel.add(new JScrollPane(listOfUsers));
+
+
 		lstUsers = GetFriendsList();
 
-		centerPanel.add(lstUsers);
+		//centerPanel.add(lstUsers);
 		centerPanel.add(new JScrollPane(ta));
 		ta.setEditable(false);
 		add(centerPanel, BorderLayout.CENTER);

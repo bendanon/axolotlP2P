@@ -22,7 +22,10 @@ public class UserRenderer extends JLabel implements ListCellRenderer<User>
                                                   boolean isSelected, boolean cellHasFocus) {
 
         eUserStatus status = user.GetUserStatus();
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/images/" + status + ".png"));
+
+        System.out.println(status);
+
+        ImageIcon imageIcon = new ImageIcon("C:\\Users\\15z\\SecureChatP2P\\Photos\\" +  status);
 
         setIcon(imageIcon);
         setText(user.GetName());

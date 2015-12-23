@@ -19,8 +19,6 @@ import java.security.cert.CertificateException;
  * 2.All trusted public identity keys of peers
  */
 public interface ITrustStore {
-
-    void syncIdentityKeystore(IdentityKeyStore identityKeyStore) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, InvalidKeyException;
     /**
      * Sets the owner's identity in this store
      * @param pair
@@ -44,6 +42,13 @@ public interface ITrustStore {
      */
     void setTrustedIdentity(String peer, IdentityKey pub) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException;
 
+    /**
+     * Meant to be used in case peer notifies the user that his device was stolen /
+     * private identity key lost. Calling this removed the peer from trust store
+     *
+     * @param peer
+     */
+    void RevokeTrustedIdentity(String peer) throws KeyStoreException;
     /**
      * Check if peer is trusted with this public key
      *

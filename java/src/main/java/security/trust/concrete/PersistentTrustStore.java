@@ -56,21 +56,6 @@ public class PersistentTrustStore implements ITrustStore {
         }
     }
 
-
-    @Override
-    public void syncIdentityKeystore(IdentityKeyStore identityKeyStore) throws KeyStoreException, UnrecoverableEntryException, NoSuchAlgorithmException, InvalidKeyException {
-        Enumeration <String> iter = keyStore.aliases();
-        while(iter.hasMoreElements())
-        {
-            String alias = iter.nextElement();
-
-            if(alias.equals("identity")) continue;
-
-            KeyStore.SecretKeyEntry entry = (KeyStore.SecretKeyEntry) keyStore.getEntry(alias, protParam);
-            identityKeyStore.saveIdentity(alias, new IdentityKey(entry.getSecretKey().getEncoded(), 0));
-        }
-    }
-
     @Override
     public void setIdentity(IdentityKeyPair pair) throws CertificateException,
                                                          NoSuchAlgorithmException,
@@ -104,6 +89,14 @@ public class PersistentTrustStore implements ITrustStore {
         if(peer.equals("identity")) return;
 
         storeKey(peer, pub.serialize());
+    }
+
+    @Override
+    public void RevokeTrustedIdentity(String peer) throws KeyStoreException {
+        if(keyStore.containsAlias(peer))
+        {
+            keyStore.deleteEntry(peer);
+        }
     }
 
     @Override

@@ -1,15 +1,21 @@
 package main;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
 //secure construction for message listener
 public class XmppMessageListener implements MessageListener {
+	public static final String IS_KEY_MESSAGE = "KEY";
+	public static final String NOT_KEY_MESSAGE = "NORMAL";
 	private String lastMessage;
 	private String lastMessageSender;
+	private boolean messageIsKey;
 	private static XmppMessageListener Listener;
 	private static boolean created = false;
+
+	public boolean getMessageType(){
+		return messageIsKey;
+	}
 
 	public String getLastMessage(){
 		return lastMessage;
@@ -29,8 +35,18 @@ public class XmppMessageListener implements MessageListener {
 			if (messageChecker == null){
 				return;
 			}
-			lastMessageSender = message.getFrom();
-			lastMessage = messageChecker;
+			String isKey = messageChecker.split("@")[0];
+			if(isKey.equals(IS_KEY_MESSAGE)){
+				messageIsKey = true;
+			}
+			else if(isKey.equals(NOT_KEY_MESSAGE)){
+				messageIsKey = false;
+			}
+			else{
+				System.out.println("error in receiving message");
+			}
+			lastMessage = messageChecker.split("@")[1];
+			lastMessageSender = message.getFrom().split("@")[0];
 
 			Listener.notifyAll();
 		}

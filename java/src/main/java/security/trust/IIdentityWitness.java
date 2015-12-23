@@ -17,4 +17,11 @@ public interface IIdentityWitness {
      * @return
      */
     boolean authenticate(IdentityKey sessionIdentityKey);
+
+    /**
+     * Sreialzies this witness so it can be sent transported on some
+     * safe side channel to a peer (channel needs to authenticated, not private)
+     * @return
+     */
+    String serialize();
 }

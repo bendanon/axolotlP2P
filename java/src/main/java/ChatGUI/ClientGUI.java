@@ -6,6 +6,7 @@ import org.jivesoftware.smack.XMPPException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileNotFoundException;
 import  java.util.Date;
 import java.text.SimpleDateFormat;
 import org.whispersystems.libaxolotl.*;
@@ -194,30 +195,59 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		}
 		else if (connected)  // Send msg
 		{
-			try
+			SendMSG(lstUsers.getSelectedValue(),tfMessage.getText());
+		}
+
+		tfMessage.setText("");
+		return;
+	}
+
+	private void SendMSG(String sendTo, String text)
+	{
+		try
+		{
+			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+
+			if (party1.isSessionInitialized(sendTo))
 			{
-				String sendTo = lstUsers.getSelectedValue();
-
-				xmppManager.sendMessage(tfMessage.getText(), sendTo, true);
-				Thread.sleep(100);
-				xmppManager.sendMessage(tfMessage.getText(), sendTo, false);
-
-				SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+				xmppManager.sendMessage(text, sendTo, false);
 				append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
-			} catch (XMPPException ex)
-			{
-				System.out.println("System Error");
-				ex.printStackTrace();
-				return;
-			} catch (Exception ex) {
-				System.out.println("System Error");
-				ex.printStackTrace();
-				return;
 			}
+			else
+			{
+				StartKeyExchange(sendTo);
 
-			tfMessage.setText("");
+				Thread.sleep(500);
+
+				if (party1.isSessionInitialized(sendTo))
+				{
+					System.out.println("Now session is initialized with " +sendTo);
+					xmppManager.sendMessage(text, sendTo, false);
+					append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
+				}
+				else
+				{
+					System.out.println("session with " + sendTo + " is not initialized yet");
+				}
+			}
+		} catch (XMPPException ex)
+		{
+			System.out.println("System Error");
+			ex.printStackTrace();
+			return;
+		} catch (Exception ex) {
+			System.out.println("System Error");
+			ex.printStackTrace();
 			return;
 		}
+	}
+
+	private void StartKeyExchange(String withWho)  throws XMPPException
+	{
+		System.out.println("Try create key exchange with " + withWho);
+		String keyExchange = party1.createKeyExchangeMessage(withWho);
+		System.out.println("Send the key exchange to " +withWho);
+		xmppManager.sendMessage(keyExchange, withWho, true);
 	}
 
 	private void Login()
@@ -232,7 +262,22 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 			store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", false);
 		} catch (KeyStoreException e) {
 			e.printStackTrace();
-		} catch (CertificateException e) {
+		}
+			catch (FileNotFoundException e)
+			{
+				try {
+					store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", true);
+				} catch (KeyStoreException ex) {
+					e.printStackTrace();
+				} catch (CertificateException ex) {
+					e.printStackTrace();
+				} catch (NoSuchAlgorithmException ex) {
+					e.printStackTrace();
+				} catch (IOException ex) {
+					e.printStackTrace();
+				}
+			}
+		 catch (CertificateException e) {
 			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
@@ -335,7 +380,39 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		}
 		else
 		{
-			append(dateFormat.format(new Date()) + "received key message " + from + ": " + Message + "\n");
+			try
+			{
+				System.out.println("Got key msg from " + from);
+
+				if (!party1.isSessionInitialized(from))
+				{
+					if (party1.consumeKeyExchangeMessage(from, Message))
+					{
+						System.out.println("Started trusted conversation with: " + from + "\n");
+						append("Started trusted conversation with: " + from + "\n");
+					}
+					else
+					{
+						System.out.println("Started untrusted conversation with: " + from + "\n");
+						append("Started untrusted conversation with: " + from + "\n");
+					}
+
+					StartKeyExchange(from);
+				}
+			} catch (UnrecoverableEntryException e) {
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (KeyStoreException e) {
+				e.printStackTrace();
+			} catch (UntrustedIdentityException e) {
+				e.printStackTrace();
+			} catch (InvalidKeyException e) {
+				e.printStackTrace();
+			}
+			catch (XMPPException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

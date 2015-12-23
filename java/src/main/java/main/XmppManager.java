@@ -111,10 +111,11 @@ public class XmppManager implements ICommManager {
 		System.out.println("Connected: " + connection.isConnected());
 
 		chatManager = connection.getChatManager();
-		setMessageReciver();
+		setMessageReciever();
 
 	}
-	private void setMessageReciver(){
+	private void setMessageReciever()
+	{
 		messageListener = XmppMessageListener.createXmppMessageListener();
 		createMessageListenerThread();
 	}

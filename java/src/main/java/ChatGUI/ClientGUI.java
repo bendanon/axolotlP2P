@@ -210,7 +210,11 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 			if (party1.isSessionInitialized(sendTo))
 			{
-				xmppManager.sendMessage(text, sendTo, false);
+
+				String encyptMsg = party1.encrypt(sendTo,text);
+				System.out.println("Encrypted msg " +encyptMsg);
+
+				xmppManager.sendMessage(encyptMsg, sendTo, false);
 				append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
 			}
 			else
@@ -222,7 +226,11 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 				if (party1.isSessionInitialized(sendTo))
 				{
 					System.out.println("Now session is initialized with " +sendTo);
-					xmppManager.sendMessage(text, sendTo, false);
+
+					String encyptMsg = party1.encrypt(sendTo,text);
+					System.out.println("Encrypted msg " +encyptMsg);
+
+					xmppManager.sendMessage(encyptMsg,sendTo,false);
 					append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
 				}
 				else
@@ -376,7 +384,32 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 		if (!isKeyMessage)
 		{
-			append(dateFormat.format(new Date()) + " " + from + ": " + Message + "\n");
+			try
+			{
+				System.out.println("Recieve encrypted msg " + Message);
+				String decryptMSG = party1.decrypt(from, Message);
+				System.out.println("After decrypt " + decryptMSG);
+
+				append(dateFormat.format(new Date()) + " " + from + ": " + decryptMSG + "\n");
+			} catch (InvalidVersionException e) {
+				e.printStackTrace();
+			} catch (UntrustedIdentityException e) {
+				e.printStackTrace();
+			} catch (InvalidKeyException e) {
+				e.printStackTrace();
+			}catch (LegacyMessageException e) {
+				e.printStackTrace();
+			}catch (DuplicateMessageException e) {
+				e.printStackTrace();
+			}
+			catch (InvalidKeyIdException e) {
+				e.printStackTrace();
+			}
+			catch (InvalidMessageException e) {
+				e.printStackTrace();
+			} catch (NoSessionException e) {
+				e.printStackTrace();
+			}
 		}
 		else
 		{
@@ -399,6 +432,11 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 					StartKeyExchange(from);
 				}
+				else
+				{
+					System.out.println("Session is already initialized");
+				}
+
 			} catch (UnrecoverableEntryException e) {
 				e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {

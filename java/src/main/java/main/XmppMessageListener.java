@@ -3,7 +3,7 @@ import ChatCommons.ICommManager;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
-
+//git
 //secure construction for message listener
 public class XmppMessageListener implements MessageListener {
 

@@ -127,7 +127,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 					if (index >= 0) {
 						User o = (User)theList.getModel().getElementAt(index);
 						System.out.println("Double-clicked on: " + o.toString());
-						o.SetUserStatus(eUserStatus.Trusted);
+						o.SetUserStatus(eUserStatus.Offline);
 					}
 				}
 			}
@@ -219,7 +219,29 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		}
 		else if (o == whoIsIn)
 		{
-			//Todo: implement fingerprint
+			try
+			{
+				String result = (String)JOptionPane.showInputDialog(this, "Please enter the finger print", "Finger Print Witness",JOptionPane.INFORMATION_MESSAGE);
+				String userName = listOfUsers.getSelectedValue().GetUserName();
+
+				if (result !=null)
+				{
+					if (party1.consumeIdentityWitness(listOfUsers.getSelectedValue().GetUserName(),
+														new FingerprintWitness(result)))
+					{
+						int index = GetIndexOfUserName(userName);
+						User fromUser = (User)listOfUsers.getModel().getElementAt(index);
+						fromUser.SetUserStatus(eUserStatus.Trusted);
+						listOfUsers.updateUI();
+					}
+				}
+
+			}
+			catch (Exception ex)
+			{
+				ex.printStackTrace();
+
+			}
 		}
 		else if (connected)  // Send msg
 		{

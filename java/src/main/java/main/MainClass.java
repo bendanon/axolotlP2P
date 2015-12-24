@@ -1,5 +1,10 @@
 package main;
 
+<<<<<<< HEAD
+import ChatCommons.INotifier;
+import org.jivesoftware.smack.XMPPException;
+
+=======
 import org.whispersystems.libaxolotl.*;
 import org.whispersystems.libaxolotl.util.Hex;
 import security.management.SecureParty;
@@ -7,6 +12,7 @@ import security.trust.concrete.FingerprintWG;
 import security.trust.concrete.FingerprintWitness;
 import security.trust.concrete.PersistentTrustStore;
 import security.utils.HexHumanizer;
+>>>>>>> origin/master
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -14,7 +20,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.util.Random;
-
 
 /**
  * Created by ben on 28/11/15.
@@ -24,26 +29,35 @@ public class MainClass {
 
     public static void main(String[] args)
     {
+        /*
+
         SecureParty party1 = null;
         SecureParty party2 = null;
         SecureParty party3 = null;
 
         //Put any path here, just make sure the user running the app has read/write perms
-        String ksPath = "/home/ben/Desktop/keystore";
+        String ksPath = "C:\\Users\\Guy\\KeyStore";
 
         PersistentTrustStore store1 = null;
         PersistentTrustStore store2 = null;
         PersistentTrustStore store3 = null;
 
+        PasswordDerivator deriv = null;
+        try {
+            deriv = new PasswordDerivator("SHA-256", "pass");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
         try {
             store1 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party1"),
-                    "pass", false);
+                    deriv.getPasswordDerivative(1), false);
 
             store2 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party2"),
-                    "pass", false);
+                    deriv.getPasswordDerivative(2), false);
 
             store3 = new PersistentTrustStore(String.format("%s/%s.ks", ksPath, "party3"),
-                    "pass", false);
+                    deriv.getPasswordDerivative(3), false);
 
         } catch (KeyStoreException e) {
             e.printStackTrace();
@@ -73,12 +87,6 @@ public class MainClass {
             e.printStackTrace();
     }
 
-        /*try {
-            party1.revokeTrustedIdentity("party2");
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }*/
-
         try {
             if(party1.consumeKeyExchangeMessage("party2", party2.createKeyExchangeMessage("party1")))
             {
@@ -103,6 +111,11 @@ public class MainClass {
             e.printStackTrace();
         }
 
+<<<<<<< HEAD
+
+        try {
+            if(party1.consumeIdentityWitness("party2", party2.generateWitness()))
+=======
         try {
 
 
@@ -127,6 +140,7 @@ public class MainClass {
             System.out.println(h.dehumanize(humanized));
             if(party1.consumeIdentityWitness("party2",
                     new FingerprintWitness(h.dehumanize(humanized))))
+>>>>>>> origin/master
             {
                 System.out.println("party1 now trusts party2");
             }
@@ -172,14 +186,15 @@ public class MainClass {
             e.printStackTrace();
         }
 
-        /*
+
+
         String username = "user2";
         String password = "crypto";
 
         XmppManager xmppManager;
 
         try{
-            xmppManager = XmppManager.createManager("guy-pc");
+            xmppManager = XmppManager.createManager("michael-pc");
         }
         catch (XMPPException e) {
             System.out.println("System Error");
@@ -223,6 +238,6 @@ public class MainClass {
         }
 
         xmppManager.disconnect();
-    */
+*/
     }
 }

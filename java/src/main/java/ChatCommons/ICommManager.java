@@ -3,7 +3,7 @@ package ChatCommons;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
-
+//git
 import java.util.List;
 
 public interface ICommManager {

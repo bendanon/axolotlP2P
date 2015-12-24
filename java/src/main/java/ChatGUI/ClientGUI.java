@@ -16,8 +16,6 @@ import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
 import security.trust.concrete.FingerprintWitness;
 import security.trust.concrete.PersistentTrustStore;
-import security.utils.HexHumanizer;
-
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -46,7 +44,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 	private SecureParty party1 = null;
 	private JTextField tfPathKS;
 	private PersistentTrustStore store1 = null;
-	private HexHumanizer hexHumanizer = null;
 
 	ClientGUI(String host, int port)
 	{
@@ -230,7 +227,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 				if (result !=null)
 				{
 					if (party1.consumeIdentityWitness(listOfUsers.getSelectedValue().GetUserName(),
-														new FingerprintWitness(hexHumanizer.dehumanize(result))))
+														new FingerprintWitness(result)))
 					{
 						int index = GetIndexOfUserName(userName);
 						User fromUser = (User)listOfUsers.getModel().getElementAt(index);
@@ -304,7 +301,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		xmppManager.sendMessage(keyExchange, withWho, true);
 	}
 
-	private void Login(){
+	private void Login()
+	{
 		ChangeGUIWhenLoginPressed();
 
 		String userName = tfUser.getText().trim();
@@ -333,23 +331,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 			e.printStackTrace();
 		}
 
-		GenerateWitness();
-	}
-
-	private void GenerateWitness()
-	{
-		String witnessRaw = party1.generateWitness().serialize();
-
-		try
-		{
-			String current = new java.io.File(getClass().getClassLoader().getResource("64K_english_dict.dic").getFile()).getCanonicalPath();
-			String humanized = null;
-			hexHumanizer = new HexHumanizer (current);
-			humanized = hexHumanizer.humanize(witnessRaw);
-			tfFingerPrint.setText(humanized);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		tfFingerPrint.setText(party1.generateWitness().serialize());
 	}
 
 	private void ChangeGUIWhenLoginPressed()

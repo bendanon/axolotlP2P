@@ -21,6 +21,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.util.Enumeration;
 
 public class ClientGUI extends JFrame implements ActionListener, INotifier
 {
@@ -37,6 +38,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 	private String defaultHost;
 //	private JList<String> lstUsers;
 	private JList<User> listOfUsers;
+	private DefaultListModel<User> listModel;
 	private XmppManager xmppManager;
 	private JTextField tfFingerPrint;
 	private SecureParty party1 = null;
@@ -101,7 +103,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		User user2 = new User("user2", eUserStatus.Offline);
 		User user3 = new User("user3", eUserStatus.Offline);
 
-		DefaultListModel<User> listModel = new DefaultListModel<>();
+		listModel = new DefaultListModel<>();
 		listModel.addElement(user1);
 		listModel.addElement(user2);
 		listModel.addElement(user3);
@@ -375,6 +377,21 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		new ClientGUI("dell", 5222);
 	}
 
+	private int GetIndexOfUserName(String name)
+	{
+		Enumeration<User> enumeration = listModel.elements();
+		while (enumeration.hasMoreElements())
+		{
+			User currUser =enumeration.nextElement();
+			if (currUser.GetUserName().equals(name))
+			{
+				return listModel.indexOf(currUser);
+			}
+		}
+
+		return -1;
+	}
+
 	public void ReceiveMessage(String from, String Message, boolean isKeyMessage)
 	{
 		from = from.split("@")[0];
@@ -402,16 +419,23 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 				if (!party1.isSessionInitialized(from))
 				{
+					int index = GetIndexOfUserName(from);
+					User fromUser = (User)listOfUsers.getModel().getElementAt(index);
+
 					if (party1.consumeKeyExchangeMessage(from, Message))
 					{
+						fromUser.SetUserStatus(eUserStatus.Trusted);
 						System.out.println("Started trusted conversation with: " + from + "\n");
 						append("Started trusted conversation with: " + from + "\n");
 					}
 					else
 					{
+						fromUser.SetUserStatus(eUserStatus.UnTrusted);
 						System.out.println("Started untrusted conversation with: " + from + "\n");
 						append("Started untrusted conversation with: " + from + "\n");
 					}
+
+					listOfUsers.updateUI();
 
 					StartKeyExchange(from);
 				}

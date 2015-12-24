@@ -1,20 +1,32 @@
 package main;
 
+<<<<<<< HEAD
 import ChatCommons.INotifier;
 import org.jivesoftware.smack.XMPPException;
 
+=======
+import org.whispersystems.libaxolotl.*;
+import org.whispersystems.libaxolotl.util.Hex;
+import security.management.SecureParty;
+import security.trust.concrete.FingerprintWG;
+import security.trust.concrete.FingerprintWitness;
+import security.trust.concrete.PersistentTrustStore;
+import security.utils.HexHumanizer;
+>>>>>>> origin/master
 
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.util.Random;
 
 /**
  * Created by ben on 28/11/15.
  */
 
 public class MainClass {
+
     public static void main(String[] args)
     {
         /*
@@ -99,9 +111,36 @@ public class MainClass {
             e.printStackTrace();
         }
 
+<<<<<<< HEAD
 
         try {
             if(party1.consumeIdentityWitness("party2", party2.generateWitness()))
+=======
+        try {
+
+
+            String witnessRaw = party2.generateWitness().serialize();
+            //witnessRaw = witnessRaw.substring(0, witnessRaw.length() / 2 - 2);
+            System.out.println(witnessRaw);
+
+            String current = new java.io.File( "./app_data/64K_english_dict.dic" ).getCanonicalPath();
+            System.out.println("Current dir:"+current);
+
+            HexHumanizer h = null;
+            String humanized = null;
+            try {
+                h = new HexHumanizer (current);
+                humanized = h.humanize(witnessRaw);
+                System.out.println(humanized);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+            System.out.println(h.dehumanize(humanized));
+            if(party1.consumeIdentityWitness("party2",
+                    new FingerprintWitness(h.dehumanize(humanized))))
+>>>>>>> origin/master
             {
                 System.out.println("party1 now trusts party2");
             }

@@ -1,11 +1,10 @@
 package ChatCommons;
 
 /**
- * Created by Guy on 23/12/2015.
+ * Created by Guy on 24/12/2015.
  */
-
-public class User {
-
+public class User
+{
     private String userName;
     private eUserStatus userStatus;
 
@@ -15,18 +14,18 @@ public class User {
         this.userStatus = status;
     }
 
-    public String GetName()
-    {
-        return userName;
-    }
-
-    public void SetStatus(eUserStatus status)
-    {
-        userStatus = status;
-    }
-
     public eUserStatus GetUserStatus()
     {
-        return userStatus;
+        return this.userStatus;
+    }
+
+    public String GetUserName()
+    {
+        return this.userName;
+    }
+
+    public void SetUserStatus(eUserStatus newStatus)
+    {
+        this.userStatus = newStatus;
     }
 }

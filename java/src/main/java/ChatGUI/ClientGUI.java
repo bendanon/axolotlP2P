@@ -2,6 +2,8 @@ package ChatGUI;
 
 import ChatCommons.ICommManager;
 import ChatCommons.INotifier;
+import ChatCommons.User;
+import ChatCommons.eUserStatus;
 import main.XmppManager;
 import main.XmppMessageListener;
 import org.jivesoftware.smack.XMPPException;
@@ -11,6 +13,7 @@ import java.awt.*;
 import java.awt.event.*;
 import  java.util.Date;
 import java.text.SimpleDateFormat;
+<<<<<<< HEAD
 
 /**
  * Created by Guy on 12/12/2015.
@@ -19,6 +22,22 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 
 	private static final long serialVersionUID = 1L;
 	// "Enter message"
+=======
+import org.whispersystems.libaxolotl.*;
+import security.management.SecureParty;
+import security.trust.concrete.FingerprintWG;
+import security.trust.concrete.FingerprintWitness;
+import security.trust.concrete.PersistentTrustStore;
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
+import java.util.Enumeration;
+
+public class ClientGUI extends JFrame implements ActionListener, INotifier
+{
+>>>>>>> origin/master
 	private JLabel label;
 	// to hold the Username and later on the messages
 	private JTextField tf;
@@ -39,9 +58,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 	// the default port number
 	private int defaultPort;
 	private String defaultHost;
+<<<<<<< HEAD
 
 	private JList<String> lstUsers;
 
+=======
+//	private JList<String> lstUsers;
+	private JList<User> listOfUsers;
+	private DefaultListModel<User> listModel;
+>>>>>>> origin/master
 	private XmppManager xmppManager;
 
 	// Constructor connection receiving a socket number
@@ -99,6 +124,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
 		JPanel centerPanel = new JPanel(new GridLayout(1,2));
 
+<<<<<<< HEAD
 		String	listUsers[] =
 				{
 						"user1",
@@ -107,11 +133,41 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 				};
 
 		lstUsers = new JList<String>(listUsers);
+=======
+		User user1 = new User("user1", eUserStatus.Offline);
+		User user2 = new User("user2", eUserStatus.Offline);
+		User user3 = new User("user3", eUserStatus.Offline);
 
-		centerPanel.add(lstUsers);
+		listModel = new DefaultListModel<>();
+		listModel.addElement(user1);
+		listModel.addElement(user2);
+		listModel.addElement(user3);
+
+		listOfUsers = new JList<>(listModel);
+		centerPanel.add(new JScrollPane(listOfUsers));
+		listOfUsers.setCellRenderer(new UserRenderer());
+
+		//lstUsers = GetFriendsList();
+>>>>>>> origin/master
+
+		//centerPanel.add(lstUsers);
 		centerPanel.add(new JScrollPane(ta));
 		ta.setEditable(false);
 		add(centerPanel, BorderLayout.CENTER);
+
+		listOfUsers.addMouseListener(new MouseAdapter(){
+			public void mouseClicked(MouseEvent mouseEvent) {
+				JList theList = (JList) mouseEvent.getSource();
+				if (mouseEvent.getClickCount() == 2) {
+					int index = theList.locationToIndex(mouseEvent.getPoint());
+					if (index >= 0) {
+						User o = (User)theList.getModel().getElementAt(index);
+						System.out.println("Double-clicked on: " + o.toString());
+						o.SetUserStatus(eUserStatus.Offline);
+					}
+				}
+			}
+		});
 
 		// the 3 buttons
 		login = new JButton("Login");
@@ -129,7 +185,13 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		southPanel.add(whoIsIn);
 		add(southPanel, BorderLayout.SOUTH);
 
+<<<<<<< HEAD
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
+=======
+	//	add(southPanel2,BorderLayout.SOUTH);
+
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+>>>>>>> origin/master
 		setSize(600, 600);
 		setVisible(true);
 		tf.requestFocus();
@@ -166,6 +228,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
+<<<<<<< HEAD
 		// if it is the Logout button
 		if (o == logout) {
 			xmppManager.disconnect();
@@ -181,6 +244,56 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		if (connected) {
 			// just have to send the message
 			//client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, tf.getText()));
+=======
+
+		if (o == login)
+		{
+			Login();
+		}
+		else if (o == logout)
+		{
+			Logout();
+		}
+		else if (o == whoIsIn)
+		{
+			try
+			{
+				String result = (String)JOptionPane.showInputDialog(this, "Please enter the finger print", "Finger Print Witness",JOptionPane.INFORMATION_MESSAGE);
+				String userName = listOfUsers.getSelectedValue().GetUserName();
+
+				if (result !=null)
+				{
+					if (party1.consumeIdentityWitness(listOfUsers.getSelectedValue().GetUserName(),
+														new FingerprintWitness(result)))
+					{
+						int index = GetIndexOfUserName(userName);
+						User fromUser = (User)listOfUsers.getModel().getElementAt(index);
+						fromUser.SetUserStatus(eUserStatus.Trusted);
+						listOfUsers.updateUI();
+					}
+				}
+
+			}
+			catch (Exception ex)
+			{
+				ex.printStackTrace();
+
+			}
+		}
+		else if (connected)  // Send msg
+		{
+			SendMSG(listOfUsers.getSelectedValue().GetUserName(),tfMessage.getText());
+		}
+
+		tfMessage.setText("");
+	}
+
+	private void SendMSG(String sendTo, String text)
+	{
+		try
+		{
+			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+>>>>>>> origin/master
 
 			try
 			{
@@ -199,6 +312,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 				ex.printStackTrace();
 				return;
 			}
+<<<<<<< HEAD
 			catch (Exception ex)
 			{
 				System.out.println("System Error");
@@ -207,6 +321,63 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 			}
 
 			tf.setText("");
+=======
+		} catch (Exception ex) {
+			System.out.println("System Error");
+			ex.printStackTrace();
+		}
+	}
+
+	private void StartKeyExchange(String withWho)  throws XMPPException
+	{
+		System.out.println("Try create key exchange with " + withWho);
+		String keyExchange = party1.createKeyExchangeMessage(withWho);
+		System.out.println("Send the key exchange to " +withWho);
+		xmppManager.sendMessage(keyExchange, withWho, true);
+	}
+
+	private void Login()
+	{
+		ChangeGUIWhenLoginPressed();
+
+		String userName = tfUser.getText().trim();
+		OpenXMPPConnection(userName,
+				  			new String(tfPassword.getPassword()));
+
+		try {
+			store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", false);
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+		}
+			catch (FileNotFoundException e) {
+				try {
+					store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", true);
+				} catch (Exception ex) {
+					e.printStackTrace();
+				}
+			}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		try {
+			party1 = new SecureParty(userName, store1, new FingerprintWG());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		tfFingerPrint.setText(party1.generateWitness().serialize());
+	}
+
+	private void ChangeGUIWhenLoginPressed()
+	{
+		/*
+		String portNumber = tfPort.getText().trim();
+		try {
+			int port = Integer.parseInt(portNumber);
+			//TODO: Send the port from the GUI to XmppManager
+		} catch (Exception en) {
+>>>>>>> origin/master
 			return;
 		}
 
@@ -297,6 +468,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 		new ClientGUI("localhost", 1500);
 	}
 
+<<<<<<< HEAD
 
 
 	public void RecieveMessage(String from, String Message,ICommManager.eMessageType messageType)
@@ -310,6 +482,79 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier {
 			from = from.split("@")[0];
 			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 			append(dateFormat.format(new Date()) + "received key message " + from + ": " + Message + "\n");
+=======
+	private int GetIndexOfUserName(String name)
+	{
+		Enumeration<User> enumeration = listModel.elements();
+		while (enumeration.hasMoreElements())
+		{
+			User currUser =enumeration.nextElement();
+			if (currUser.GetUserName().equals(name))
+			{
+				return listModel.indexOf(currUser);
+			}
+		}
+
+		return -1;
+	}
+
+	public void ReceiveMessage(String from, String Message, boolean isKeyMessage)
+	{
+		from = from.split("@")[0];
+		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+
+		if (!isKeyMessage)
+		{
+			try
+			{
+				System.out.println("Recieve encrypted msg " + Message);
+				String decryptMSG = party1.decrypt(from, Message);
+				System.out.println("After decrypt " + decryptMSG);
+
+				append(dateFormat.format(new Date()) + " " + from + ": " + decryptMSG + "\n");
+			} catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
+		}
+		else
+		{
+			try
+			{
+				System.out.println("Got key msg from " + from);
+
+				if (!party1.isSessionInitialized(from))
+				{
+					int index = GetIndexOfUserName(from);
+					User fromUser = (User)listOfUsers.getModel().getElementAt(index);
+
+					if (party1.consumeKeyExchangeMessage(from, Message))
+					{
+						fromUser.SetUserStatus(eUserStatus.Trusted);
+						System.out.println("Started trusted conversation with: " + from + "\n");
+						append("Started trusted conversation with: " + from + "\n");
+					}
+					else
+					{
+						fromUser.SetUserStatus(eUserStatus.UnTrusted);
+						System.out.println("Started untrusted conversation with: " + from + "\n");
+						append("Started untrusted conversation with: " + from + "\n");
+					}
+
+					listOfUsers.updateUI();
+
+					StartKeyExchange(from);
+				}
+				else
+				{
+					System.out.println("Session is already initialized");
+				}
+
+			} catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
+>>>>>>> origin/master
 		}
 	}
 }

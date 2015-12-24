@@ -19,13 +19,11 @@ public class UserRenderer extends JLabel implements ListCellRenderer<User>
 
     @Override
     public Component getListCellRendererComponent(JList<? extends User> list, User user, int index,
-                                                  boolean isSelected, boolean cellHasFocus) {
-
+                                                  boolean isSelected, boolean cellHasFocus)
+    {
         eUserStatus status = user.GetUserStatus();
 
-        System.out.println(status);
-
-        ImageIcon imageIcon = new ImageIcon("C:\\Users\\15z\\SecureChatP2P\\Photos\\" +  status + ".png");
+        ImageIcon imageIcon = new ImageIcon(getClass().getClassLoader().getResource(status  + ".png"));
 
         setIcon(imageIcon);
         setText(user.GetUserName());

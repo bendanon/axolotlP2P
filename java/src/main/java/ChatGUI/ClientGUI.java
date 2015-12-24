@@ -102,15 +102,13 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		JPanel centerPanel = new JPanel(new GridLayout(1,2));
 
 		User user1 = new User("user1", eUserStatus.Offline);
-		User user2 = new User("user1", eUserStatus.Trusted);
-		User user3 = new User("user1", eUserStatus.Wait);
-		User user4 = new User("user1", eUserStatus.UnTrusted);
+		User user2 = new User("user2", eUserStatus.Offline);
+		User user3 = new User("user3", eUserStatus.Offline);
 
 		DefaultListModel<User> listModel = new DefaultListModel<>();
 		listModel.addElement(user1);
 		listModel.addElement(user2);
 		listModel.addElement(user3);
-		listModel.addElement(user4);
 
 		listOfUsers = new JList<>(listModel);
 		centerPanel.add(new JScrollPane(listOfUsers));
@@ -122,6 +120,20 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		centerPanel.add(new JScrollPane(ta));
 		ta.setEditable(false);
 		add(centerPanel, BorderLayout.CENTER);
+
+		listOfUsers.addMouseListener(new MouseAdapter(){
+			public void mouseClicked(MouseEvent mouseEvent) {
+				JList theList = (JList) mouseEvent.getSource();
+				if (mouseEvent.getClickCount() == 2) {
+					int index = theList.locationToIndex(mouseEvent.getPoint());
+					if (index >= 0) {
+						User o = (User)theList.getModel().getElementAt(index);
+						System.out.println("Double-clicked on: " + o.toString());
+						o.SetUserStatus(eUserStatus.Trusted);
+					}
+				}
+			}
+		});
 
 		// the 3 buttons
 		login = new JButton("Login");

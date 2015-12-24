@@ -115,9 +115,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		centerPanel.add(new JScrollPane(listOfUsers));
 		listOfUsers.setCellRenderer(new UserRenderer());
 
-		//lstUsers = GetFriendsList();
-
-		//centerPanel.add(lstUsers);
 		centerPanel.add(new JScrollPane(ta));
 		ta.setEditable(false);
 		add(centerPanel, BorderLayout.CENTER);
@@ -130,7 +127,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 					if (index >= 0) {
 						User o = (User)theList.getModel().getElementAt(index);
 						System.out.println("Double-clicked on: " + o.toString());
-						o.SetUserStatus(eUserStatus.Offline);
+						//o.SetUserStatus(eUserStatus.Offline);
 					}
 				}
 			}
@@ -388,16 +385,23 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 			xmppManager.addNotifier(this);
 			xmppManager.userLogin(userName, password);
 
+			RemoveUserFromList(userName);
 			System.out.println("Connected User Name is: " + userName);
 
 			ConnectedWithFriends(userName);
-
 		}
 		catch (XMPPException e)
 		{
 			e.printStackTrace();
 			connectionFailed();
 		}
+	}
+
+	private void RemoveUserFromList(String userName)
+	{
+		int index = GetIndexOfUserName(userName);
+		listModel.remove(index);
+		listOfUsers.updateUI();
 	}
 
 	private void ConnectedWithFriends(String userName) throws XMPPException

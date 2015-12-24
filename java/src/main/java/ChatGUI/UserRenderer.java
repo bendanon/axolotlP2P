@@ -25,10 +25,10 @@ public class UserRenderer extends JLabel implements ListCellRenderer<User>
 
         System.out.println(status);
 
-        ImageIcon imageIcon = new ImageIcon("C:\\Users\\15z\\SecureChatP2P\\Photos\\" +  status);
+        ImageIcon imageIcon = new ImageIcon("C:\\Users\\15z\\SecureChatP2P\\Photos\\" +  status + ".png");
 
         setIcon(imageIcon);
-        setText(user.GetName());
+        setText(user.GetUserName());
 
         if (isSelected)
         {

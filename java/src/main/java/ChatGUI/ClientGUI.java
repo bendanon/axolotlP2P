@@ -106,7 +106,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		User user3 = new User("user1", eUserStatus.Wait);
 		User user4 = new User("user1", eUserStatus.UnTrusted);
 
-		//
 		DefaultListModel<User> listModel = new DefaultListModel<>();
 		listModel.addElement(user1);
 		listModel.addElement(user2);
@@ -115,9 +114,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 		listOfUsers = new JList<>(listModel);
 		centerPanel.add(new JScrollPane(listOfUsers));
+		listOfUsers.setCellRenderer(new UserRenderer());
 
-
-		lstUsers = GetFriendsList();
+		//lstUsers = GetFriendsList();
 
 		//centerPanel.add(lstUsers);
 		centerPanel.add(new JScrollPane(ta));

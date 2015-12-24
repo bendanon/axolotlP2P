@@ -22,10 +22,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 
-
-/**
- * Created by Guy on 12/12/2015.
- */
 public class ClientGUI extends JFrame implements ActionListener, INotifier
 {
 	private JLabel label;
@@ -39,7 +35,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 	private boolean connected;
 	private int defaultPort;
 	private String defaultHost;
-	private JList<String> lstUsers;
+//	private JList<String> lstUsers;
 	private JList<User> listOfUsers;
 	private XmppManager xmppManager;
 	private JTextField tfFingerPrint;
@@ -162,7 +158,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 	//	add(southPanel2,BorderLayout.SOUTH);
 
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setSize(600, 600);
 		setVisible(true);
 		tfMessage.requestFocus();
@@ -225,11 +221,10 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		}
 		else if (connected)  // Send msg
 		{
-			SendMSG(lstUsers.getSelectedValue(),tfMessage.getText());
+			SendMSG(listOfUsers.getSelectedValue().GetUserName(),tfMessage.getText());
 		}
 
 		tfMessage.setText("");
-		return;
 	}
 
 	private void SendMSG(String sendTo, String text)
@@ -268,15 +263,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 					System.out.println("session with " + sendTo + " is not initialized yet");
 				}
 			}
-		} catch (XMPPException ex)
-		{
-			System.out.println("System Error");
-			ex.printStackTrace();
-			return;
 		} catch (Exception ex) {
 			System.out.println("System Error");
 			ex.printStackTrace();
-			return;
 		}
 	}
 
@@ -301,41 +290,20 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		} catch (KeyStoreException e) {
 			e.printStackTrace();
 		}
-			catch (FileNotFoundException e)
-			{
+			catch (FileNotFoundException e) {
 				try {
 					store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", true);
-				} catch (KeyStoreException ex) {
-					e.printStackTrace();
-				} catch (CertificateException ex) {
-					e.printStackTrace();
-				} catch (NoSuchAlgorithmException ex) {
-					e.printStackTrace();
-				} catch (IOException ex) {
+				} catch (Exception ex) {
 					e.printStackTrace();
 				}
 			}
-		 catch (CertificateException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		catch (Exception ex) {
+			ex.printStackTrace();
 		}
 
 		try {
 			party1 = new SecureParty(userName, store1, new FingerprintWG());
-		} catch (CertificateException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		} catch (KeyStoreException e) {
-			e.printStackTrace();
-		} catch (UnrecoverableEntryException e) {
-			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -421,24 +389,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 				System.out.println("After decrypt " + decryptMSG);
 
 				append(dateFormat.format(new Date()) + " " + from + ": " + decryptMSG + "\n");
-			} catch (InvalidVersionException e) {
-				e.printStackTrace();
-			} catch (UntrustedIdentityException e) {
-				e.printStackTrace();
-			} catch (InvalidKeyException e) {
-				e.printStackTrace();
-			}catch (LegacyMessageException e) {
-				e.printStackTrace();
-			}catch (DuplicateMessageException e) {
-				e.printStackTrace();
-			}
-			catch (InvalidKeyIdException e) {
-				e.printStackTrace();
-			}
-			catch (InvalidMessageException e) {
-				e.printStackTrace();
-			} catch (NoSessionException e) {
-				e.printStackTrace();
+			} catch (Exception ex)
+			{
+				ex.printStackTrace();
 			}
 		}
 		else
@@ -467,19 +420,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 					System.out.println("Session is already initialized");
 				}
 
-			} catch (UnrecoverableEntryException e) {
-				e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			} catch (KeyStoreException e) {
-				e.printStackTrace();
-			} catch (UntrustedIdentityException e) {
-				e.printStackTrace();
-			} catch (InvalidKeyException e) {
-				e.printStackTrace();
-			}
-			catch (XMPPException e) {
-				e.printStackTrace();
+			} catch (Exception ex)
+			{
+				ex.printStackTrace();
 			}
 		}
 	}

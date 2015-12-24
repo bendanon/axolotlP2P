@@ -1,16 +1,19 @@
 package main;
 
 import org.whispersystems.libaxolotl.*;
+import org.whispersystems.libaxolotl.util.Hex;
 import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
 import security.trust.concrete.FingerprintWitness;
 import security.trust.concrete.PersistentTrustStore;
+import security.utils.HexHumanizer;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.util.Random;
 
 
 /**
@@ -18,6 +21,7 @@ import java.security.cert.CertificateException;
  */
 
 public class MainClass {
+
     public static void main(String[] args)
     {
         SecureParty party1 = null;
@@ -100,10 +104,29 @@ public class MainClass {
         }
 
         try {
-            System.out.println(party2.generateWitness().serialize());
 
+
+            String witnessRaw = party2.generateWitness().serialize();
+            //witnessRaw = witnessRaw.substring(0, witnessRaw.length() / 2 - 2);
+            System.out.println(witnessRaw);
+
+            String current = new java.io.File( "./app_data/64K_english_dict.dic" ).getCanonicalPath();
+            System.out.println("Current dir:"+current);
+
+            HexHumanizer h = null;
+            String humanized = null;
+            try {
+                h = new HexHumanizer (current);
+                humanized = h.humanize(witnessRaw);
+                System.out.println(humanized);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+            System.out.println(h.dehumanize(humanized));
             if(party1.consumeIdentityWitness("party2",
-                    new FingerprintWitness(party2.generateWitness().serialize())))
+                    new FingerprintWitness(h.dehumanize(humanized))))
             {
                 System.out.println("party1 now trusts party2");
             }

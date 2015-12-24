@@ -22,7 +22,7 @@ public class FingerprintWitness implements IIdentityWitness {
 
     @Override
     public boolean authenticate(IdentityKey sessionIdentityKey) {
-        return fingerprint.equals(sessionIdentityKey.getFingerprint());
+        return fingerprint.equals(sessionIdentityKey.getFingerprint().substring(3));
     }
 
     @Override

@@ -14,6 +14,6 @@ import security.trust.IWitnessGenerator;
 public class FingerprintWG implements IWitnessGenerator {
     @Override
     public IIdentityWitness generateWitness(IdentityKey identityKey) {
-        return new FingerprintWitness(identityKey.getFingerprint());
+        return new FingerprintWitness(identityKey.getFingerprint().substring(3));
     }
 }

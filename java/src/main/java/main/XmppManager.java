@@ -101,8 +101,8 @@ public class XmppManager implements ICommManager {
 
 		SmackConfiguration.setPacketReplyTimeout(packetReplyTimeout);
 
-		//config = new ConnectionConfiguration(server, port);
-		config = new ConnectionConfiguration("michael-pc", port);
+		config = new ConnectionConfiguration(server, port);
+		//config = new ConnectionConfiguration("michael-pc", port);
 		config.setSASLAuthenticationEnabled(false);
 		config.setSecurityMode(SecurityMode.disabled);
 

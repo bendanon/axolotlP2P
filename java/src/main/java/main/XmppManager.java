@@ -1,7 +1,7 @@
 package main;
 import java.util.Collection;
 import java.util.HashMap;
-
+//git
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -16,7 +16,7 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.packet.Presence.Type;
 import ChatCommons.ICommManager;
-
+import ChatCommons.eMessageType;
 import ChatCommons.INotifier;
 public class XmppManager implements ICommManager {
 
@@ -58,6 +58,7 @@ public class XmppManager implements ICommManager {
 			System.out.println("status :" + presence.getStatus());
 			System.out.println("mode :" + presence.getMode());
 			System.out.println("type :" + presence.getType());
+
 		}
 
 	}
@@ -101,7 +102,7 @@ public class XmppManager implements ICommManager {
 		SmackConfiguration.setPacketReplyTimeout(packetReplyTimeout);
 
 		//config = new ConnectionConfiguration(server, port);
-		config = new ConnectionConfiguration("Dell", port);
+		config = new ConnectionConfiguration("michael-pc", port);
 		config.setSASLAuthenticationEnabled(false);
 		config.setSecurityMode(SecurityMode.disabled);
 
@@ -111,11 +112,10 @@ public class XmppManager implements ICommManager {
 		System.out.println("Connected: " + connection.isConnected());
 
 		chatManager = connection.getChatManager();
-		setMessageReciever();
+		setMessageReciver();
 
 	}
-	private void setMessageReciever()
-	{
+	private void setMessageReciver(){
 		messageListener = XmppMessageListener.createXmppMessageListener();
 		createMessageListenerThread();
 	}
@@ -163,7 +163,7 @@ public class XmppManager implements ICommManager {
 			roster.createEntry(buddyJID, buddyName, null);
 		}
 	}
-	public void sendMessage(String message, String buddyName, boolean isKeyMessage) throws XMPPException {
+	public void sendMessage(String message, String buddyName, eMessageType keyType) throws XMPPException {
 		String buddyJID = buddyName.concat("@".concat(server));
 		System.out.println(String.format("trying to send mesage '%1$s' to user %2$s", message, buddyJID));
 		Chat chat = ChatMap.get(buddyJID);
@@ -171,12 +171,25 @@ public class XmppManager implements ICommManager {
 			System.out.println(String.format("cant find the requested chat"));
 		}
 		else{
-			if(isKeyMessage == true){
-				message = XmppMessageListener.IS_KEY_MESSAGE.concat("@".concat((message)));
+			switch(keyType){
+				case eKEY_FINISHED:
+					message = XmppMessageListener.KEY_FINISHED_MESSAGE.concat("@".concat((message)));
+					break;
+				case eKEY_RESPONSE:
+					message = XmppMessageListener.KEY_BEGIN_MESSAGE.concat("@".concat((message)));
+					break;
+				case eKEY_START:
+					message = XmppMessageListener.KEY_RESPONSE_MESSAGE.concat("@".concat((message)));
+					break;
+				case eNORMAL:
+					message = XmppMessageListener.NORMAL_MESSAGE.concat("@".concat((message)));
+					break;
+				case eWITNESS:
+					message = XmppMessageListener.WITNESS_MESSAGE.concat("@".concat((message)));
+					break;
+
 			}
-			else{
-				message = XmppMessageListener.NOT_KEY_MESSAGE.concat("@".concat((message)));
-			}
+
 
 			chat.sendMessage(message);
 			System.out.println(String.format("message sent"));

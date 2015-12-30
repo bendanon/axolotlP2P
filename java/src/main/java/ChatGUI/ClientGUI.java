@@ -1,5 +1,6 @@
 package ChatGUI;
 
+import ChatCommons.ICommManager;
 import ChatCommons.INotifier;
 import ChatCommons.User;
 import ChatCommons.eUserStatus;
@@ -24,7 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.util.Enumeration;
-
+import ChatCommons.eMessageType;
 public class ClientGUI extends JFrame implements ActionListener, INotifier
 {
 	private JLabel label;
@@ -276,7 +277,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 				String encyptMsg = party1.encrypt(sendTo,text);
 				System.out.println("Encrypted msg " +encyptMsg);
 
-				xmppManager.sendMessage(encyptMsg, sendTo, false);
+				xmppManager.sendMessage(encyptMsg, sendTo, eMessageType.eNORMAL);
 				append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
 			}
 			else
@@ -292,7 +293,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 					String encyptMsg = party1.encrypt(sendTo,text);
 					System.out.println("Encrypted msg " +encyptMsg);
 
-					xmppManager.sendMessage(encyptMsg,sendTo,false);
+					xmppManager.sendMessage(encyptMsg,sendTo,eMessageType.eKEY_START);
 					append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
 				}
 				else
@@ -311,7 +312,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		System.out.println("Try create key exchange with " + withWho);
 		String keyExchange = party1.createKeyExchangeMessage(withWho);
 		System.out.println("Send the key exchange to " +withWho);
-		xmppManager.sendMessage(keyExchange, withWho, true);
+		xmppManager.sendMessage(keyExchange, withWho, eMessageType.eKEY_FINISHED);
 	}
 
 	private void Login(){
@@ -448,12 +449,12 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		return -1;
 	}
 
-	public void ReceiveMessage(String from, String Message, boolean isKeyMessage)
+	public void RecieveMessage(String from, String Message,eMessageType messageType)
 	{
 		from = from.split("@")[0];
 		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
-		if (!isKeyMessage)
+		if (messageType == eMessageType.eNORMAL)
 		{
 			try
 			{

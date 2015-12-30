@@ -1,20 +1,27 @@
 package main;
+import ChatCommons.eMessageType;
+import ChatCommons.ICommManager;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
-
+//git
 //secure construction for message listener
 public class XmppMessageListener implements MessageListener {
-	public static final String IS_KEY_MESSAGE = "KEY";
-	public static final String NOT_KEY_MESSAGE = "NORMAL";
+
+	public static final String KEY_BEGIN_MESSAGE = "KEY";
+	public static final String NORMAL_MESSAGE = "NORMAL";
+	public static final String WITNESS_MESSAGE = "WITNESS";
+	public static final String KEY_RESPONSE_MESSAGE = "RESPONSE";
+	public static final String KEY_FINISHED_MESSAGE = "FINISHED";
+
 	private String lastMessage;
 	private String lastMessageSender;
-	private boolean messageIsKey;
+	private eMessageType messageType;
 	private static XmppMessageListener Listener;
 	private static boolean created = false;
 
-	public boolean getMessageType(){
-		return messageIsKey;
+	public eMessageType getMessageType(){
+		return messageType;
 	}
 
 	public String getLastMessage(){
@@ -36,11 +43,20 @@ public class XmppMessageListener implements MessageListener {
 				return;
 			}
 			String isKey = messageChecker.split("@")[0];
-			if(isKey.equals(IS_KEY_MESSAGE)){
-				messageIsKey = true;
+			if(isKey.equals(KEY_BEGIN_MESSAGE)){
+				messageType = eMessageType.eKEY_START;
 			}
-			else if(isKey.equals(NOT_KEY_MESSAGE)){
-				messageIsKey = false;
+			else if(isKey.equals(KEY_FINISHED_MESSAGE)){
+				messageType = eMessageType.eKEY_FINISHED;
+			}
+			else if(isKey.equals(KEY_RESPONSE_MESSAGE)){
+				messageType = eMessageType.eKEY_RESPONSE;
+			}
+			else if(isKey.equals(NORMAL_MESSAGE)){
+				messageType = eMessageType.eNORMAL;
+			}
+			else if(isKey.equals(WITNESS_MESSAGE)){
+				messageType = eMessageType.eWITNESS;
 			}
 			else{
 				System.out.println("error in receiving message");

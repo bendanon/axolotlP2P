@@ -3,23 +3,28 @@ package ChatCommons;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
+//git
+import java.util.List;
 
 public interface ICommManager {
 
     //login user
-    public void userLogin(String userName, String password) throws XMPPException;
+    void userLogin(String userName, String password) throws XMPPException;
 
     //disconnect
-    public void disconnect();
+    void disconnect();
 
     //send message
-    public void sendMessage(String message, String buddyName, boolean isKeyMessage) throws XMPPException;
+    void sendMessage(String message, String buddyName, eMessageType messageType) throws XMPPException;
+
+    //get online users
+    //List<String> getOnlineUsers();
 
     //add notifier to message listener
-    public void addNotifier(INotifier notifier);
+    void addNotifier(INotifier notifier);
 
     //creates entry to friend and creates chat session
-    public void connectToFriend(String buddyName) throws XMPPException;
+    void connectToFriend(String buddyName) throws XMPPException;
 
     //status functions:
     /*
@@ -37,9 +42,9 @@ public interface ICommManager {
     	Mode -- one of five presence modes: available (the default), chat, away, xa (extended away), and dnd (do not disturb).
     */
     //get stats of the friends you currently!! connected to
-    public void getBuddiesStats();
+    void getBuddiesStats();
 
     //set user status
     //	example: xmppManager.setStatus(true, "Hello everyone",Presence.Mode.available);
-    public void setStatus(boolean available, String status,Mode mode);
+    void setStatus(boolean available, String status,Mode mode);
 }

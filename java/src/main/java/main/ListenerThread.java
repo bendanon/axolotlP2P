@@ -3,7 +3,7 @@ package main;
 import java.util.ArrayList;
 import java.util.List;
 import ChatCommons.INotifier;
-
+import ChatCommons.eMessageType;
 public class ListenerThread extends Thread {
     private XmppMessageListener messageListener;
     private List<INotifier> listOfNotifiers;
@@ -25,7 +25,7 @@ public class ListenerThread extends Thread {
                     messageListener.wait();
                     System.out.println(String.format("MESSAGE ARRIVED"));
                     for(INotifier notifier : listOfNotifiers){
-                        notifier.ReceiveMessage(messageListener.getLastMessageSender(), messageListener.getLastMessage(),messageListener.getMessageType());
+                        notifier.RecieveMessage(messageListener.getLastMessageSender(), messageListener.getLastMessage(),messageListener.getMessageType());
                     }
                     messageListener.printLastMessage();
                 }

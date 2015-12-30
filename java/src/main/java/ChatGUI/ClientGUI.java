@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.FileNotFoundException;
-import  java.util.Date;
+import java.util.Date;
 import java.text.SimpleDateFormat;
 import org.whispersystems.libaxolotl.*;
 import security.management.SecureParty;
@@ -33,7 +33,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 	private JTextField tfServer, tfPort;
 	private JPasswordField tfPassword;
 	private JTextField tfUser;
-	private JButton login, logout, whoIsIn;
+	private JButton login, logout, whoIsIn, btnCreateKS;
 	private JTextArea ta;
 	private boolean connected;
 	private int defaultPort;
@@ -142,17 +142,18 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		whoIsIn = new JButton("Witness");
 		whoIsIn.addActionListener(this);
 		whoIsIn.setEnabled(false);
-
+		btnCreateKS = new JButton("Create KS");
+		btnCreateKS.addActionListener(this);
 		tfFingerPrint = new JTextField("Your Finger Print...");
 		tfFingerPrint.setEditable(false);
 		tfFingerPrint.setBackground(Color.WHITE);
 		JPanel southPanel = new JPanel(new GridLayout(2,2));
-		JPanel buttonPanel = new JPanel(new GridLayout(1,3));
+		JPanel buttonPanel = new JPanel(new GridLayout(1,4));
 
 		buttonPanel.add(login);
 		buttonPanel.add(logout);
 		buttonPanel.add(whoIsIn);
-
+		buttonPanel.add(btnCreateKS);
 		southPanel.add(tfFingerPrint);
 		southPanel.add(buttonPanel);
 
@@ -217,11 +218,24 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		{
 			Logout();
 		}
+		else if (o == btnCreateKS)
+		{
+			String userName = tfUser.getText().trim();
+			String password = new String(tfPassword.getPassword());
+
+			try {
+				store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), password, true);
+				System.out.println("finish create trust store");
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
 		else if (o == whoIsIn)
 		{
 			try
 			{
-				String result = (String)JOptionPane.showInputDialog(this, "Please enter the finger print", "Finger Print Witness",JOptionPane.INFORMATION_MESSAGE);
+				String result = JOptionPane.showInputDialog(this, "Please enter the finger print", "Finger Print Witness",JOptionPane.INFORMATION_MESSAGE);
 				String userName = listOfUsers.getSelectedValue().GetUserName();
 
 				if (result !=null)
@@ -230,7 +244,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 							new FingerprintWitness(hexHumanizer.dehumanize(result))))
 					{
 						int index = GetIndexOfUserName(userName);
-						User fromUser = (User)listOfUsers.getModel().getElementAt(index);
+						User fromUser = listOfUsers.getModel().getElementAt(index);
 						fromUser.SetUserStatus(eUserStatus.Trusted);
 						listOfUsers.updateUI();
 					}
@@ -259,7 +273,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 			if (party1.isSessionInitialized(sendTo))
 			{
-
 				String encyptMsg = party1.encrypt(sendTo,text);
 				System.out.println("Encrypted msg " +encyptMsg);
 
@@ -305,23 +318,23 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		ChangeGUIWhenLoginPressed();
 
 		String userName = tfUser.getText().trim();
-		OpenXMPPConnection(userName,
-				new String(tfPassword.getPassword()));
+		String password = new String(tfPassword.getPassword());
+		OpenXMPPConnection(userName,password);
 
-		try {
-			store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", false);
-		} catch (KeyStoreException e) {
-			e.printStackTrace();
-		}
-		catch (FileNotFoundException e) {
+		if (store1 == null) {
 			try {
-				store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), "pass", true);
-			} catch (Exception ex) {
+				store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), password, false);
+			} catch (KeyStoreException e) {
 				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				try {
+					store1 = new PersistentTrustStore(String.format("%s/%s.ks", tfPathKS.getText(), userName), password, true);
+				} catch (Exception ex) {
+					e.printStackTrace();
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
-		}
-		catch (Exception ex) {
-			ex.printStackTrace();
 		}
 
 		try {
@@ -340,9 +353,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		try
 		{
 			String current = new java.io.File(getClass().getClassLoader().getResource("64K_english_dict.dic").getFile()).getCanonicalPath();
-			String humanized = null;
 			hexHumanizer = new HexHumanizer (current);
-			humanized = hexHumanizer.humanize(witnessRaw);
+			String humanized = hexHumanizer.humanize(witnessRaw);
 			tfFingerPrint.setText(humanized);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -445,7 +457,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		{
 			try
 			{
-				System.out.println("Recieve encrypted msg " + Message);
+				System.out.println("Receive encrypted msg " + Message);
 				String decryptMSG = party1.decrypt(from, Message);
 				System.out.println("After decrypt " + decryptMSG);
 
@@ -457,15 +469,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 		}
 		else
 		{
+			int index = GetIndexOfUserName(from);
+			User fromUser = listOfUsers.getModel().getElementAt(index);
+
 			try
 			{
 				System.out.println("Got key msg from " + from);
 
 				if (!party1.isSessionInitialized(from))
 				{
-					int index = GetIndexOfUserName(from);
-					User fromUser = (User)listOfUsers.getModel().getElementAt(index);
-
 					if (party1.consumeKeyExchangeMessage(from, Message))
 					{
 						fromUser.SetUserStatus(eUserStatus.Trusted);
@@ -488,7 +500,12 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 					System.out.println("Session is already initialized");
 				}
 
-			} catch (Exception ex)
+			} catch (UntrustedIdentityException ex)
+			{
+				fromUser.SetUserStatus(eUserStatus.UnTrusted);
+				listOfUsers.updateUI();
+			}
+			catch (Exception ex)
 			{
 				ex.printStackTrace();
 			}

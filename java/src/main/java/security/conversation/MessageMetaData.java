@@ -1,5 +1,6 @@
 package security.conversation;
 
+import org.jivesoftware.smack.util.Base64;
 import security.management.SecureParty;
 import security.utils.DigestUtil;
 
@@ -43,7 +44,7 @@ public class MessageMetaData {
 
     public static int calculateSerializedMetaSize(int peers)
     {
-        return INDEX_SIZE + (peers* META_UNIT_SIZE) + META_TRAILER_SIZE;
+        return INDEX_SIZE + (peers* META_UNIT_SIZE);
     }
 
     public static String createMessageMetadata(int messageIndex, Map<String, MessageHistory> history, List<String> peers) {
@@ -56,8 +57,8 @@ public class MessageMetaData {
             RepliedMessageRecord record = history.get(peer).getLastChainRecord().toRepliedMessageRecord();
             record.serialize(buffer);
         }
-        buffer.put(META_TRAILER.getBytes());
-        return new String(buffer.array());
+
+        return Base64.encodeBytes(buffer.array());
     }
 
 }

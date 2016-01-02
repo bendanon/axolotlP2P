@@ -21,7 +21,7 @@ public class MessageRecord {
         this.peer = peer;
     }
 
-    public MessageRecord(String plain, int messageIndex, byte[] hashOnHistory, String peer)
+    private MessageRecord(String plain, int messageIndex, byte[] hashOnHistory, String peer)
     {
         this.messageIndex = messageIndex;
         this.chainHash = hashOnHistory;
@@ -32,11 +32,6 @@ public class MessageRecord {
     public int getMessageIndex()
     {
         return messageIndex;
-    }
-
-    public byte[] getChainHash()
-    {
-        return chainHash;
     }
 
     public boolean compare(RepliedMessageRecord repliedMessageRecord) {

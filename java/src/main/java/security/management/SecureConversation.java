@@ -1,6 +1,7 @@
 package security.management;
 
 import ChatCommons.IChatSender;
+import org.jivesoftware.smack.util.Base64;
 import org.whispersystems.libaxolotl.*;
 import security.conversation.*;
 
@@ -47,22 +48,20 @@ public class SecureConversation {
         peers.remove(peer);
     }
 
-    public void sendMessage (String message)
+    public void sendMessage (String content)
     {
         MessageHistory myHistory = conversationHistory.get(secureParty.getOwner());
         int index = myHistory.getLastChainRecord().getMessageIndex() + 1;
+        myHistory.insert(content, index);
 
-        String metadata =
-                MessageMetaData.createMessageMetadata(index, conversationHistory, peers);
+        String metadata = MessageMetaData.createMessageMetadata(index, conversationHistory, peers);
 
-        String fullMessage = metadata + message;
+        String fullMessage = String.format("%s%s%s", metadata, MessageMetaData.META_TRAILER, content);
 
         for(String peer : peers)
         {
             sender.sendMessage(peer, secureParty.encrypt(peer, fullMessage));
         }
-
-        myHistory.insert(message, index);
     }
 
     public DecryptedPackage receiveMessage (String peer, String ciphertext)
@@ -78,7 +77,7 @@ public class SecureConversation {
         //Split the message to metadata (0) and content (1)
         String[] plainParts = plaintext.split(MessageMetaData.META_TRAILER);
 
-        ByteBuffer serializedMeta = ByteBuffer.wrap(plainParts[0].getBytes());
+        ByteBuffer serializedMeta = ByteBuffer.wrap(Base64.decode(plainParts[0]));
 
         //The message index would be the first field in the message
         int messageIndex = serializedMeta.getInt();

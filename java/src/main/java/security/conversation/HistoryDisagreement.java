@@ -6,12 +6,12 @@ package security.conversation;
 public class HistoryDisagreement {
     private String peerName;
     private int index;
-    private int confirmedIndex;
+    private int lastChainIndex;
 
     public HistoryDisagreement(String peerName, int index, int lastChainIndex) {
         this.peerName = peerName;
         this.index = index;
-        this.confirmedIndex = lastChainIndex;
+        this.lastChainIndex = lastChainIndex;
     }
 
     public String getPeerName() {
@@ -22,7 +22,7 @@ public class HistoryDisagreement {
         return index;
     }
 
-    public int getConfirmedIndex() {
-        return confirmedIndex;
+    public int getLastChainIndex() {
+        return lastChainIndex;
     }
 }

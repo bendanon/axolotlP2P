@@ -35,4 +35,9 @@ public class MessageHistory {
         return records.get(lastChainIndex);
     }
 
+    public MessageRecord getLastRecord()
+    {
+        return records.get(records.size()-1);
+    }
+
 }

@@ -54,7 +54,7 @@ public class SecureConversation {
         int index = myHistory.getLastChainRecord().getMessageIndex() + 1;
         myHistory.insert(content, index);
 
-        String metadata = MessageMetaData.createMessageMetadata(index, conversationHistory, peers);
+        String metadata = MessageMetaData.createMessageMetadata(index, conversationHistory);
 
         String fullMessage = String.format("%s%s%s", metadata, MessageMetaData.META_TRAILER, content);
 

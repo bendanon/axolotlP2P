@@ -47,12 +47,12 @@ public class MessageMetaData {
         return INDEX_SIZE + (peers* META_UNIT_SIZE);
     }
 
-    public static String createMessageMetadata(int messageIndex, Map<String, MessageHistory> history, List<String> peers) {
-        ByteBuffer buffer = ByteBuffer.allocate(calculateSerializedMetaSize(peers.size()));
+    public static String createMessageMetadata(int messageIndex, Map<String, MessageHistory> history) {
+        ByteBuffer buffer = ByteBuffer.allocate(calculateSerializedMetaSize(history.keySet().size()));
 
         buffer.putInt(messageIndex);
 
-        for(String peer : peers)
+        for(String peer : history.keySet())
         {
             RepliedMessageRecord record = history.get(peer).getLastRecord().toRepliedMessageRecord();
             record.serialize(buffer);

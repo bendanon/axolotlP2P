@@ -1,7 +1,10 @@
 package main;
 
+import ChatCommons.IChatSender;
 import org.whispersystems.libaxolotl.*;
 import org.whispersystems.libaxolotl.util.Hex;
+import security.conversation.DecryptedPackage;
+import security.management.SecureConversation;
 import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
 import security.trust.concrete.FingerprintWitness;
@@ -13,7 +16,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.util.Random;
+import java.util.*;
 
 
 /**
@@ -110,7 +113,10 @@ public class MainClass {
             //witnessRaw = witnessRaw.substring(0, witnessRaw.length() / 2 - 2);
             System.out.println(witnessRaw);
 
-            String current = new java.io.File( "./app_data/64K_english_dict.dic" ).getCanonicalPath();
+            String current =
+                    new java.io.File("/home/ben/Projects/AppliedCrypto/SecureChatP2P/" +
+                            "java/src/main/resources/64K_english_dict.dic").getCanonicalPath();
+
             System.out.println("Current dir:"+current);
 
             HexHumanizer h = null;
@@ -172,57 +178,59 @@ public class MainClass {
             e.printStackTrace();
         }
 
-        /*
-        String username = "user2";
-        String password = "crypto";
+        final Map<String, String> messages = new HashMap<>();
 
-        XmppManager xmppManager;
+        class SimpleSender implements IChatSender
+        {
 
-        try{
-            xmppManager = XmppManager.createManager("guy-pc");
-        }
-        catch (XMPPException e) {
-            System.out.println("System Error");
-            e.printStackTrace();
-            return;
-        }
-        try {
-            xmppManager.userLogin(username, password);
-        } catch (XMPPException e) {
-            e.printStackTrace();
-        }
-        xmppManager.setStatus(true, "Hello everyone");
-
-        String buddyJID = "user1";
-        String buddyName = "user1";
-        try {
-            xmppManager.setChat(buddyJID, buddyName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            xmppManager.sendMessage("Hello mate", "user1");
-        } catch (XMPPException e) {
-            e.printStackTrace();
-        }
-
-        boolean isRunning = true;
-
-        while (isRunning) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            try {
-                xmppManager.sendMessage("Hello mate", "user1");
-            } catch (XMPPException e) {
-                e.printStackTrace();
+            @Override
+            public void sendMessage(String peer, String message) {
+                messages.put(peer, message);
             }
         }
 
-        xmppManager.disconnect();
-    */
+        System.out.println("============");
+
+        SecureConversation conv1 = new SecureConversation(party1, new SimpleSender());
+        conv1.addPeer("party2");
+        SecureConversation conv2 = new SecureConversation(party2, new SimpleSender());
+        conv2.addPeer("party1");
+
+        conv1.sendMessage("Hi party2!");
+        try {
+            DecryptedPackage dp = conv2.receiveMessage("party1", messages.get("party2"));
+            display("party1", dp);
+            conv1.sendMessage("Hi party2!!");
+            dp = conv2.receiveMessage("party1", messages.get("party2"));
+            display("party1", dp);
+            conv1.sendMessage("Hi party2!!!");
+            conv1.sendMessage("Hi party2!!!!");
+            dp = conv2.receiveMessage("party1", messages.get("party2"));
+            display("party1", dp);
+
+        } catch (InvalidKeyIdException e) {
+            e.printStackTrace();
+        } catch (NoSessionException e) {
+            e.printStackTrace();
+        } catch (LegacyMessageException e) {
+            e.printStackTrace();
+        } catch (InvalidVersionException e) {
+            e.printStackTrace();
+        } catch (InvalidMessageException e) {
+            e.printStackTrace();
+        } catch (DuplicateMessageException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (UntrustedIdentityException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static void display(String sender, DecryptedPackage dp)
+    {
+        String display = String.format("%s[%d/%d]:%s", sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
+        System.out.println(display);
     }
 }

@@ -1,5 +1,6 @@
 package security.management;
 
+
 import org.jivesoftware.smack.util.Base64;
 import org.whispersystems.libaxolotl.*;
 import org.whispersystems.libaxolotl.InvalidKeyException;
@@ -12,6 +13,7 @@ import org.whispersystems.libaxolotl.state.PreKeyBundle;
 import org.whispersystems.libaxolotl.state.PreKeyRecord;
 import org.whispersystems.libaxolotl.state.SignedPreKeyRecord;
 import org.whispersystems.libaxolotl.state.impl.InMemoryAxolotlStore;
+
 import security.trust.IIdentityWitness;
 import security.trust.ITrustStore;
 import security.trust.IWitnessGenerator;
@@ -23,6 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
+
 
 /**
  * Created by ben on 28/11/15.
@@ -48,7 +51,8 @@ public class SecureParty
         sessions = new HashMap<>();
         this.email = email;
         this.numericId = email.hashCode();
-        initializeAxolotlStore(email);
+
+        initializeAxolotlStore();
     }
 
     /**
@@ -61,7 +65,7 @@ public class SecureParty
         return witnessGenerator.generateWitness(axolotlStore.getIdentityKeyPair().getPublicKey());
     }
 
-    private AxolotlStore generateKeyStore(String email) throws CertificateException, NoSuchAlgorithmException,
+    private AxolotlStore generateKeyStore() throws CertificateException, NoSuchAlgorithmException,
             KeyStoreException, IOException, UnrecoverableEntryException, InvalidKeyException {
 
         IdentityKeyPair idPair = trustStore.getIdentity();
@@ -96,10 +100,10 @@ public class SecureParty
         return (email + "signed").hashCode();
     }
 
-    private void initializeAxolotlStore(String email) throws CertificateException, InvalidKeyException,
+    private void initializeAxolotlStore() throws CertificateException, InvalidKeyException,
             NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, IOException {
 
-        axolotlStore = generateKeyStore(email);
+        axolotlStore = generateKeyStore();
 
         //generate a signed prekey pair
         signedPair = Curve.generateKeyPair();
@@ -180,12 +184,7 @@ public class SecureParty
 
 
         //Check if the peer is trusted
-        if(trustStore.isTrusted(peer,bundle.getIdentityKey().getPublicKey()))
-        {
-            return true;
-        }
-
-        return false;
+        return trustStore.isTrusted(peer,bundle.getIdentityKey().getPublicKey());
     }
 
     /**
@@ -220,10 +219,9 @@ public class SecureParty
             InvalidMessageException, InvalidKeyException, DuplicateMessageException, InvalidKeyIdException,
             UntrustedIdentityException, LegacyMessageException {
 
-        byte[] plaintext =  sessions.get(peer).getSessionCipher()
-                .decrypt(new PreKeyWhisperMessage(Base64.decode(ciphertext)));;
+        return sessions.get(peer).getSessionCipher()
+                .decrypt(new PreKeyWhisperMessage(Base64.decode(ciphertext)));
 
-        return plaintext;
     }
 
 
@@ -231,7 +229,7 @@ public class SecureParty
             InvalidVersionException, InvalidMessageException, DuplicateMessageException,
             InvalidKeyException, InvalidKeyIdException, NoSessionException {
 
-        byte[] plaintext = null;
+        byte[] plaintext;
 
         try {
 
@@ -247,5 +245,9 @@ public class SecureParty
         }
 
         return new String(plaintext);
+    }
+
+    public String getOwner() {
+        return email;
     }
 }

@@ -5,24 +5,33 @@ package security.conversation;
  */
 public class HistoryDisagreement {
     private String peerName;
-    private int index;
-    private int lastChainIndex;
+    private int lastIndexPeerSaw;
+    private int lastIndexISaw;
+    private boolean isConsistentWithChain;
 
-    public HistoryDisagreement(String peerName, int index, int lastChainIndex) {
+
+    public HistoryDisagreement(String peerName, int lastIndexPeerSaw,
+                               int lastIndexISaw, boolean isConsistentWithChain) {
+
         this.peerName = peerName;
-        this.index = index;
-        this.lastChainIndex = lastChainIndex;
+        this.lastIndexPeerSaw = lastIndexPeerSaw;
+        this.isConsistentWithChain = isConsistentWithChain;
+        this.lastIndexISaw = lastIndexISaw;
     }
 
     public String getPeerName() {
         return peerName;
     }
 
-    public int getIndex() {
-        return index;
+    public int getLastIndexPeerSaw() {
+        return lastIndexPeerSaw;
     }
 
-    public int getLastChainIndex() {
-        return lastChainIndex;
+    public boolean isConsistentWithChain() {
+        return isConsistentWithChain;
+    }
+
+    public int getLastIndexISaw() {
+        return lastIndexISaw;
     }
 }

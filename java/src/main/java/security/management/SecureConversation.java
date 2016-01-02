@@ -96,16 +96,19 @@ public class SecureConversation {
 
         while(mmd.hasNext())
         {
-            RepliedMessageRecord hisRecord = mmd.next();
+            RepliedMessageRecord hisLastRecord = mmd.next();
 
             //The last recorded message arriving in order from replied peer
+            MessageRecord myLastRecord =
+                    conversationHistory.get(hisLastRecord.getRepliedPeer()).getLastRecord();
 
-            MessageRecord myRecord = conversationHistory.get(hisRecord.getRepliedPeer()).getLastChainRecord();
+            MessageHistory peerHistory = conversationHistory.get(hisLastRecord.getRepliedPeer());
 
-            if(!myRecord.compare(hisRecord))
+            if(!myLastRecord.compare(hisLastRecord))
             {
-                hdList.add(new HistoryDisagreement(hisRecord.getRepliedPeer(),
-                        hisRecord.getMessageIndex(), myRecord.getMessageIndex()));
+                hdList.add(new HistoryDisagreement(hisLastRecord.getRepliedPeer(),
+                        hisLastRecord.getMessageIndex(), myLastRecord.getMessageIndex(),
+                        peerHistory.isConsistentWithChain(hisLastRecord)));
             }
         }
 

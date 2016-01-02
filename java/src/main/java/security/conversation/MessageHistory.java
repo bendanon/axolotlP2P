@@ -40,4 +40,14 @@ public class MessageHistory {
         return records.get(records.size()-1);
     }
 
+    public boolean isConsistentWithChain(RepliedMessageRecord hisLastRecord) {
+        for(MessageRecord record : records)
+        {
+            if(record.compare(hisLastRecord))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

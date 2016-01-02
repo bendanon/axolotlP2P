@@ -238,6 +238,8 @@ public class MainClass {
             dp = conv1.receiveMessage("party2", messages.get("party1"));
             display("party1", "party2", dp);
 
+            conv3.receiveMessage("party2", messages.get("party3"));
+
             conv3.sendMessage("HI");
             //conv3.sendMessage("HI");
             //conv3.sendMessage("HI");
@@ -271,13 +273,39 @@ public class MainClass {
     private static void display(String screen, String sender, DecryptedPackage dp)
     {
         String display = String.format("%s screen> %s[%d/%d]:%s",screen, sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
+        System.out.println(display);
+
         ListIterator<HistoryDisagreement> hdlist = dp.getHistoryDisagreementIterator();
-        String disagreements = "";
+
+        boolean inconsistencyFlag = false;
+        if(hdlist.hasNext())
+        {
+            inconsistencyFlag = true;
+        }
+
+        StringBuilder builder = new StringBuilder(1000);
+
         while(hdlist.hasNext())
         {
             HistoryDisagreement hd = hdlist.next();
-            disagreements += String.format("%s[%d/%d] ", hd.getPeerName(),hd.getIndex(), hd.getLastChainIndex());
+
+            builder.append(String.format("The last message %s saw from %s is %d.",
+                    sender, hd.getPeerName(), hd.getLastIndexPeerSaw()));
+
+            builder.append(
+                    String.format(" Up to %d it is %sconsistent with what you saw.%s", hd.getLastIndexPeerSaw(),
+                            hd.isConsistentWithChain() ? "" : "in", System.getProperty("line.separator")));
         }
-        System.out.println(display + String.format(" (Responds to %s)", disagreements));
+
+        if(inconsistencyFlag)
+        {
+            String part1 = String.format("You and %s are seeing different views of the conversation.",
+                    sender);
+
+            System.out.println(String.format("+++++%s%s%s%s+++++", System.getProperty("line.separator"),
+                    part1, System.getProperty("line.separator"), builder.toString(),
+                    System.getProperty("line.separator")));
+        }
+
     }
 }

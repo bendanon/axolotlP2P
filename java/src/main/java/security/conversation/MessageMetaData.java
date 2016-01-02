@@ -54,7 +54,7 @@ public class MessageMetaData {
 
         for(String peer : peers)
         {
-            RepliedMessageRecord record = history.get(peer).getLastChainRecord().toRepliedMessageRecord();
+            RepliedMessageRecord record = history.get(peer).getLastRecord().toRepliedMessageRecord();
             record.serialize(buffer);
         }
 

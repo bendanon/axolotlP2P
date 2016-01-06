@@ -5,7 +5,7 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 //git
 import java.util.List;
-
+import main.*;
 public interface ICommManager {
 
     //login user
@@ -15,7 +15,7 @@ public interface ICommManager {
     void disconnect();
 
     //send message
-    void sendMessage(String message, String buddyName, eMessageType messageType) throws XMPPException;
+    public void sendMessage(String message, String buddyName, ChatCommons.eMessageType keyType) throws XMPPException;
 
     //get online users
     //List<String> getOnlineUsers();
@@ -42,9 +42,11 @@ public interface ICommManager {
     	Mode -- one of five presence modes: available (the default), chat, away, xa (extended away), and dnd (do not disturb).
     */
     //get stats of the friends you currently!! connected to
-    void getBuddiesStats();
+    //each string array has the following fields: user=0,name,status,mode,type.
+    FriendsStatus[] getBuddiesStats();
 
     //set user status
     //	example: xmppManager.setStatus(true, "Hello everyone",Presence.Mode.available);
+    //when connecting status will be set by default, the method is given in case someone wants to update his status
     void setStatus(boolean available, String status,Mode mode);
 }

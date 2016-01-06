@@ -12,6 +12,8 @@ import java.awt.event.*;
 import java.io.FileNotFoundException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+
+import org.jivesoftware.smack.packet.Presence;
 import org.whispersystems.libaxolotl.*;
 import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
@@ -397,6 +399,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 			xmppManager = XmppManager.createManager(tfServer.getText());
 			xmppManager.addNotifier(this);
 			xmppManager.userLogin(userName, password);
+			xmppManager.getBuddiesStats();
 
 			RemoveUserFromList(userName);
 			System.out.println("Connected User Name is: " + userName);
@@ -421,7 +424,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 	{
 		if (userName.equals("user1"))
 		{
-			xmppManager.connectToFriend("user2");
+			//xmppManager.connectToFriend("user2");
 		}
 		else
 		{
@@ -431,7 +434,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 
 	public static void main(String[] args)
 	{
-		new ClientGUI("dell", 5222);
+		new ClientGUI("michael-pc", 5222);
 	}
 
 	private int GetIndexOfUserName(String name)
@@ -444,6 +447,13 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 			{
 				return listModel.indexOf(currUser);
 			}
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			xmppManager.getBuddiesStats();
 		}
 
 		return -1;

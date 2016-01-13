@@ -32,10 +32,6 @@ public class SecureConversation {
 
     public boolean addPeer(String peer)
     {
-        if(!secureParty.isSessionInitialized(peer))
-        {
-            return false;
-        }
         conversationHistory.put(peer, new MessageHistory(peer));
         peers.add(peer);
 
@@ -60,7 +56,9 @@ public class SecureConversation {
 
         for(String peer : peers)
         {
-            sender.sendMessage(peer, secureParty.encrypt(peer, fullMessage));
+            if(secureParty.isSessionInitialized(peer)) {
+                sender.sendMessage(peer, secureParty.encrypt(peer, fullMessage));
+            }
         }
     }
 

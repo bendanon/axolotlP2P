@@ -302,8 +302,8 @@ public class MainClass {
 
         if(inconsistencyFlag)
         {
-            String part1 = String.format("You and %s are seeing different views of the conversation.",
-                    sender);
+            String part1 = String.format("You (%s) and %s are seeing different views of the conversation.",
+                    screen, sender);
 
             System.out.println(String.format("+++++%s%s%s%s+++++", System.getProperty("line.separator"),
                     part1, System.getProperty("line.separator"), builder.toString(),

@@ -1,6 +1,10 @@
 package main;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.io.*;
+import java.nio.charset.Charset;
 //git
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
@@ -18,10 +22,12 @@ import org.jivesoftware.smack.packet.Presence.Type;
 import ChatCommons.ICommManager;
 import ChatCommons.eMessageType;
 import ChatCommons.INotifier;
+import main.FriendStatus;
+
 public class XmppManager implements ICommManager {
 
-
 	private static final int packetReplyTimeout = 500; // ms
+	private static final int statusFields = 5; // ms
 	private final int PORT = 5222;
 	private String server;
 	private int port;
@@ -34,9 +40,7 @@ public class XmppManager implements ICommManager {
 	private XmppMessageListener messageListener;
 	private HashMap<String,Chat> ChatMap;
 
-
-
-	public void getBuddiesStats(){
+	public FriendStatus[] getBuddiesStats(){
 		System.out.println(String.format("getting buddy list..."));
 		try {
 			Thread.sleep(1000);
@@ -46,21 +50,43 @@ public class XmppManager implements ICommManager {
 		}
 		Roster roster = connection.getRoster();
 		Collection<RosterEntry> entries = roster.getEntries();
+
 		System.out.println("There are " + entries.size() + " buddy(ies):");
 		String user;
 		Presence presence;
+		FriendStatus[] friendsStatus = new FriendStatus[entries.size()];
+		int userIndex = 0;
 		for(RosterEntry r:entries)
 		{
 			user = r.getUser();
-			presence = roster.getPresence(user);
-			System.out.println("user: "+user);
-			System.out.println("name: "+r.getName());
-			System.out.println("status :" + presence.getStatus());
-			System.out.println("mode :" + presence.getMode());
-			System.out.println("type :" + presence.getType());
-
+			try {
+				presence = roster.getPresence(user);
+				friendsStatus[userIndex] = new FriendStatus();
+				friendsStatus[userIndex].setUser(user);
+				friendsStatus[userIndex].setName(r.getName());
+				if(presence.isAvailable()){
+					friendsStatus[userIndex].setStatus(presence.getStatus());
+					friendsStatus[userIndex].setMode(presence.getMode().toString());
+					friendsStatus[userIndex].setType(presence.getType().toString());
+				}
+				else{
+					friendsStatus[userIndex].setStatus("unavailable");
+					friendsStatus[userIndex].setMode("unavailable");
+					friendsStatus[userIndex].setType("unavailable");
+				}
+			}
+			catch(java.lang.NullPointerException e){
+				System.out.println("error in getting friends stats");
+				e.printStackTrace();
+			}
+			System.out.println("user: "+friendsStatus[userIndex].getUser());
+			System.out.println("name: "+friendsStatus[userIndex].getName());
+			System.out.println("status :" + friendsStatus[userIndex].getStatus());
+			System.out.println("mode :" + friendsStatus[userIndex].getMode());
+			System.out.println("type :" + friendsStatus[userIndex].getType());
+			userIndex++;
 		}
-
+		return friendsStatus;
 	}
 
 	private XmppManager(String xmppServer){
@@ -101,8 +127,8 @@ public class XmppManager implements ICommManager {
 
 		SmackConfiguration.setPacketReplyTimeout(packetReplyTimeout);
 
-		config = new ConnectionConfiguration(server, port);
-		//config = new ConnectionConfiguration("michael-pc", port);
+		//config = new ConnectionConfiguration(server, port);
+		config = new ConnectionConfiguration("michael-pc", port);
 		config.setSASLAuthenticationEnabled(false);
 		config.setSecurityMode(SecurityMode.disabled);
 
@@ -117,18 +143,35 @@ public class XmppManager implements ICommManager {
 	}
 	private void setMessageReciver(){
 		messageListener = XmppMessageListener.createXmppMessageListener();
+		System.out.println("trying to connect");
 		createMessageListenerThread();
+		System.out.println("connected");
+
 	}
 
 
 	public void userLogin(String username, String password) throws XMPPException {
 		if (connection!=null && connection.isConnected()) {
 			connection.login(username, password);
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			clearRoster();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			setStatus(true, "online", Presence.Mode.chat);
+			connectToDefaultFriends();
 		}
 	}
 
 	public void setStatus(boolean available, String status,Mode mode) {
-
 		Presence.Type type = available? Type.available: Type.unavailable;
 		Presence presence = new Presence(type);
 		presence.setStatus(status);
@@ -136,20 +179,22 @@ public class XmppManager implements ICommManager {
 		connection.sendPacket(presence);
 
 	}
-
+	private void clearRoster(){
+		Roster roster = connection.getRoster();
+		Collection<RosterEntry> entries = roster.getEntries();
+		for(RosterEntry r:entries)
+		{
+			try {
+				roster.removeEntry(r);
+			} catch (XMPPException e) {
+				System.out.println("error in removing entry from roster");
+				e.printStackTrace();
+			}
+		}
+	}
 	public void disconnect() {
 		if (connection!=null && connection.isConnected()) {
-			Roster roster = connection.getRoster();
-			Collection<RosterEntry> entries = roster.getEntries();
-			for(RosterEntry r:entries)
-			{
-				try {
-					roster.removeEntry(r);
-				} catch (XMPPException e) {
-					System.out.println("error in removing entry from roster");
-					e.printStackTrace();
-				}
-			}
+			clearRoster();
 			connection.disconnect();
 		}
 	}
@@ -176,10 +221,10 @@ public class XmppManager implements ICommManager {
 					message = XmppMessageListener.KEY_FINISHED_MESSAGE.concat("@".concat((message)));
 					break;
 				case eKEY_RESPONSE:
-					message = XmppMessageListener.KEY_BEGIN_MESSAGE.concat("@".concat((message)));
+					message = XmppMessageListener.KEY_RESPONSE_MESSAGE.concat("@".concat((message)));
 					break;
 				case eKEY_START:
-					message = XmppMessageListener.KEY_RESPONSE_MESSAGE.concat("@".concat((message)));
+					message = XmppMessageListener.KEY_BEGIN_MESSAGE.concat("@".concat((message)));
 					break;
 				case eNORMAL:
 					message = XmppMessageListener.NORMAL_MESSAGE.concat("@".concat((message)));
@@ -193,6 +238,36 @@ public class XmppManager implements ICommManager {
 
 			chat.sendMessage(message);
 			System.out.println(String.format("message sent"));
+		}
+	}
+
+	private List<String> getFriends(){
+		List<String> friendList = new ArrayList<String>();
+		String line;
+		try (
+				InputStream fis = new FileInputStream("C:\\crypto\\friends.txt");
+				InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+				BufferedReader br = new BufferedReader(isr);
+		) {
+			while ((line = br.readLine()) != null) {
+				friendList.add(line);
+			}
+		}
+		catch(java.io.IOException ioExc){
+			System.out.println(String.format("error in getting friends"));
+		}
+		return friendList;
+	}
+	private void connectToDefaultFriends(){
+		List<String> friends = getFriends()  ;
+		for (int i = 0; i < friends.size(); i++){
+			try{
+				System.out.println("connecting to: " + friends.get(i) );
+				connectToFriend(friends.get(i));
+			}
+			catch (XMPPException e){
+				System.out.println(String.format("error in connection to friends"));
+			}
 		}
 	}
 }

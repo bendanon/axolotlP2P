@@ -12,7 +12,7 @@ import java.awt.event.*;
 import java.io.FileNotFoundException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
-
+import main.FriendStatus;
 import org.jivesoftware.smack.packet.Presence;
 import org.whispersystems.libaxolotl.*;
 import security.management.SecureParty;
@@ -399,7 +399,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier
 			xmppManager = XmppManager.createManager(tfServer.getText());
 			xmppManager.addNotifier(this);
 			xmppManager.userLogin(userName, password);
-			xmppManager.getBuddiesStats();
+			FriendStatus[] friendsStat = xmppManager.getBuddiesStats();
 
 			RemoveUserFromList(userName);
 			System.out.println("Connected User Name is: " + userName);

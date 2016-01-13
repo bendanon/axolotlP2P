@@ -1,5 +1,6 @@
 package main;
-public class FriendsStatus{
+
+public class FriendStatus{
     private String user;
     private String name;
     private String status;

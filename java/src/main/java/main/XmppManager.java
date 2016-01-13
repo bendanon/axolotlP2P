@@ -22,9 +22,9 @@ import org.jivesoftware.smack.packet.Presence.Type;
 import ChatCommons.ICommManager;
 import ChatCommons.eMessageType;
 import ChatCommons.INotifier;
-import main.FriendsStatus;
-public class XmppManager implements ICommManager {
+import main.FriendStatus;
 
+public class XmppManager implements ICommManager {
 
 	private static final int packetReplyTimeout = 500; // ms
 	private static final int statusFields = 5; // ms
@@ -40,7 +40,7 @@ public class XmppManager implements ICommManager {
 	private XmppMessageListener messageListener;
 	private HashMap<String,Chat> ChatMap;
 
-	public FriendsStatus[] getBuddiesStats(){
+	public FriendStatus[] getBuddiesStats(){
 		System.out.println(String.format("getting buddy list..."));
 		try {
 			Thread.sleep(1000);
@@ -54,19 +54,31 @@ public class XmppManager implements ICommManager {
 		System.out.println("There are " + entries.size() + " buddy(ies):");
 		String user;
 		Presence presence;
-		FriendsStatus[] friendsStatus = new FriendsStatus[entries.size()];
+		FriendStatus[] friendsStatus = new FriendStatus[entries.size()];
 		int userIndex = 0;
 		for(RosterEntry r:entries)
 		{
-			//friendsStatus[userIndex] = new String[statusFields];
 			user = r.getUser();
-			presence = roster.getPresence(user);
-			friendsStatus[userIndex].setUser(user);
-			friendsStatus[userIndex].setName(r.getName());
-			friendsStatus[userIndex].setStatus(presence.getStatus());
-			friendsStatus[userIndex].setMode(presence.getMode().toString());
-			friendsStatus[userIndex].setType(presence.getType().toString());
-
+			try {
+				presence = roster.getPresence(user);
+				friendsStatus[userIndex] = new FriendStatus();
+				friendsStatus[userIndex].setUser(user);
+				friendsStatus[userIndex].setName(r.getName());
+				if(presence.isAvailable()){
+					friendsStatus[userIndex].setStatus(presence.getStatus());
+					friendsStatus[userIndex].setMode(presence.getMode().toString());
+					friendsStatus[userIndex].setType(presence.getType().toString());
+				}
+				else{
+					friendsStatus[userIndex].setStatus("unavailable");
+					friendsStatus[userIndex].setMode("unavailable");
+					friendsStatus[userIndex].setType("unavailable");
+				}
+			}
+			catch(java.lang.NullPointerException e){
+				System.out.println("error in getting friends stats");
+				e.printStackTrace();
+			}
 			System.out.println("user: "+friendsStatus[userIndex].getUser());
 			System.out.println("name: "+friendsStatus[userIndex].getName());
 			System.out.println("status :" + friendsStatus[userIndex].getStatus());
@@ -209,10 +221,10 @@ public class XmppManager implements ICommManager {
 					message = XmppMessageListener.KEY_FINISHED_MESSAGE.concat("@".concat((message)));
 					break;
 				case eKEY_RESPONSE:
-					message = XmppMessageListener.KEY_BEGIN_MESSAGE.concat("@".concat((message)));
+					message = XmppMessageListener.KEY_RESPONSE_MESSAGE.concat("@".concat((message)));
 					break;
 				case eKEY_START:
-					message = XmppMessageListener.KEY_RESPONSE_MESSAGE.concat("@".concat((message)));
+					message = XmppMessageListener.KEY_BEGIN_MESSAGE.concat("@".concat((message)));
 					break;
 				case eNORMAL:
 					message = XmppMessageListener.NORMAL_MESSAGE.concat("@".concat((message)));
@@ -229,30 +241,29 @@ public class XmppManager implements ICommManager {
 		}
 	}
 
-	private String[] getFriends(){
-		String[] friends = null;
+	private List<String> getFriends(){
 		List<String> friendList = new ArrayList<String>();
 		String line;
 		try (
-				InputStream fis = new FileInputStream("c:/crypto/friends");
+				InputStream fis = new FileInputStream("C:\\crypto\\friends.txt");
 				InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
 				BufferedReader br = new BufferedReader(isr);
 		) {
 			while ((line = br.readLine()) != null) {
-
+				friendList.add(line);
 			}
 		}
 		catch(java.io.IOException ioExc){
 			System.out.println(String.format("error in getting friends"));
 		}
-		return friends;
+		return friendList;
 	}
 	private void connectToDefaultFriends(){
-		String[] friends = getFriends();
-		for (int i = 0; i < friends.length; i++){
+		List<String> friends = getFriends()  ;
+		for (int i = 0; i < friends.size(); i++){
 			try{
-				System.out.println("connecting to: " + friends[i] );
-				connectToFriend(friends[i]);
+				System.out.println("connecting to: " + friends.get(i) );
+				connectToFriend(friends.get(i));
 			}
 			catch (XMPPException e){
 				System.out.println(String.format("error in connection to friends"));

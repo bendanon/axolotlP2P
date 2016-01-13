@@ -43,7 +43,7 @@ public interface ICommManager {
     */
     //get stats of the friends you currently!! connected to
     //each string array has the following fields: user=0,name,status,mode,type.
-    FriendsStatus[] getBuddiesStats();
+    FriendStatus[] getBuddiesStats();
 
     //set user status
     //	example: xmppManager.setStatus(true, "Hello everyone",Presence.Mode.available);

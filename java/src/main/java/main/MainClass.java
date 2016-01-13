@@ -1,7 +1,10 @@
 package main;
 
+import ChatCommons.IChatSender;
 import org.whispersystems.libaxolotl.*;
-import org.whispersystems.libaxolotl.util.Hex;
+import security.conversation.DecryptedPackage;
+import security.conversation.HistoryDisagreement;
+import security.management.SecureConversation;
 import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
 import security.trust.concrete.FingerprintWitness;
@@ -13,7 +16,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
-import java.util.Random;
+import java.util.*;
 
 
 /**
@@ -58,7 +61,7 @@ public class MainClass {
         try {
             party1 = new SecureParty("party1", store1, new FingerprintWG());
             party2 = new SecureParty("party2", store2, new FingerprintWG());
-            party3 = new SecureParty("party2", store3, new FingerprintWG());
+            party3 = new SecureParty("party3", store3, new FingerprintWG());
         } catch (CertificateException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
@@ -91,6 +94,8 @@ public class MainClass {
             party2.consumeKeyExchangeMessage("party1", party1.createKeyExchangeMessage("party2"));
             party2.consumeKeyExchangeMessage("party3", party3.createKeyExchangeMessage("party2"));
             party3.consumeKeyExchangeMessage("party2", party2.createKeyExchangeMessage("party3"));
+            party1.consumeKeyExchangeMessage("party3", party3.createKeyExchangeMessage("party1"));
+            party3.consumeKeyExchangeMessage("party1", party1.createKeyExchangeMessage("party3"));
         } catch (UnrecoverableEntryException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
@@ -110,7 +115,10 @@ public class MainClass {
             //witnessRaw = witnessRaw.substring(0, witnessRaw.length() / 2 - 2);
             System.out.println(witnessRaw);
 
-            String current = new java.io.File( "./app_data/64K_english_dict.dic" ).getCanonicalPath();
+            String current =
+                    new java.io.File("/home/ben/Projects/AppliedCrypto/SecureChatP2P/" +
+                            "java/src/main/resources/64K_english_dict.dic").getCanonicalPath();
+
             System.out.println("Current dir:"+current);
 
             HexHumanizer h = null;
@@ -172,57 +180,135 @@ public class MainClass {
             e.printStackTrace();
         }
 
-        /*
-        String username = "user2";
-        String password = "crypto";
+        final Map<String, String> messages = new HashMap<>();
 
-        XmppManager xmppManager;
+        class SimpleSender implements IChatSender
+        {
 
-        try{
-            xmppManager = XmppManager.createManager("guy-pc");
-        }
-        catch (XMPPException e) {
-            System.out.println("System Error");
-            e.printStackTrace();
-            return;
-        }
-        try {
-            xmppManager.userLogin(username, password);
-        } catch (XMPPException e) {
-            e.printStackTrace();
-        }
-        xmppManager.setStatus(true, "Hello everyone");
-
-        String buddyJID = "user1";
-        String buddyName = "user1";
-        try {
-            xmppManager.setChat(buddyJID, buddyName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            xmppManager.sendMessage("Hello mate", "user1");
-        } catch (XMPPException e) {
-            e.printStackTrace();
-        }
-
-        boolean isRunning = true;
-
-        while (isRunning) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            try {
-                xmppManager.sendMessage("Hello mate", "user1");
-            } catch (XMPPException e) {
-                e.printStackTrace();
+            @Override
+            public void sendMessage(String peer, String message) {
+                messages.put(peer, message);
             }
         }
 
-        xmppManager.disconnect();
-    */
+        System.out.println("============");
+
+        SecureConversation conv1 = new SecureConversation(party1, new SimpleSender());
+        conv1.addPeer("party2");
+        conv1.addPeer("party3");
+        SecureConversation conv2 = new SecureConversation(party2, new SimpleSender());
+        conv2.addPeer("party1");
+        conv2.addPeer("party3");
+        SecureConversation conv3 = new SecureConversation(party3, new SimpleSender());
+        conv3.addPeer("party1");
+        conv3.addPeer("party2");
+
+        //conv3.sendMessage("derp!");
+
+        conv1.sendMessage("Hi party2!");
+
+        try {
+            conv3.receiveMessage("party1", messages.get("party3"));
+            DecryptedPackage dp = conv2.receiveMessage("party1", messages.get("party2"));
+            display("party2", "party1", dp);
+            conv1.sendMessage("Hi party2!!");
+            conv3.receiveMessage("party1", messages.get("party3"));
+            dp = conv2.receiveMessage("party1", messages.get("party2"));
+            display("party2", "party1", dp);
+            conv1.sendMessage("Hi party2!!!");
+            //conv1.sendMessage("Hi party2!!!!");
+            dp = conv2.receiveMessage("party1", messages.get("party2"));
+            display("party2", "party1", dp);
+
+            System.out.println("============");
+            conv2.sendMessage("Hi party1!");
+            dp = conv1.receiveMessage("party2", messages.get("party1"));
+            display("party1", "party2", dp);
+
+            conv2.sendMessage("Hi party1!!");
+            dp = conv1.receiveMessage("party2", messages.get("party1"));
+            display("party1", "party2", dp);
+
+            //conv2.sendMessage("lost"); //lost message
+            //conv1.sendMessage("lost"); //lost message
+
+            //After one is gone
+            conv1.sendMessage("sup");
+            dp = conv2.receiveMessage("party1", messages.get("party2"));
+            display("party2", "party1", dp);
+
+            conv2.sendMessage("sup");
+            dp = conv1.receiveMessage("party2", messages.get("party1"));
+            display("party1", "party2", dp);
+
+            conv3.receiveMessage("party2", messages.get("party3"));
+
+            conv3.sendMessage("HI");
+            //conv3.sendMessage("HI");
+            //conv3.sendMessage("HI");
+
+            dp = conv1.receiveMessage("party3", messages.get("party1"));
+            display("party1", "party3", dp);
+            dp = conv2.receiveMessage("party3", messages.get("party2"));
+            display("party2", "party3", dp);
+
+
+        } catch (InvalidKeyIdException e) {
+            e.printStackTrace();
+        } catch (NoSessionException e) {
+            e.printStackTrace();
+        } catch (LegacyMessageException e) {
+            e.printStackTrace();
+        } catch (InvalidVersionException e) {
+            e.printStackTrace();
+        } catch (InvalidMessageException e) {
+            e.printStackTrace();
+        } catch (DuplicateMessageException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (UntrustedIdentityException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static void display(String screen, String sender, DecryptedPackage dp)
+    {
+        String display = String.format("%s screen> %s[%d/%d]:%s",screen, sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
+        System.out.println(display);
+
+        ListIterator<HistoryDisagreement> hdlist = dp.getHistoryDisagreementIterator();
+
+        boolean inconsistencyFlag = false;
+        if(hdlist.hasNext())
+        {
+            inconsistencyFlag = true;
+        }
+
+        StringBuilder builder = new StringBuilder(1000);
+
+        while(hdlist.hasNext())
+        {
+            HistoryDisagreement hd = hdlist.next();
+
+            builder.append(String.format("The last message %s saw from %s is %d.",
+                    sender, hd.getPeerName(), hd.getLastIndexPeerSaw()));
+
+            builder.append(
+                    String.format(" Up to %d it is %sconsistent with what you saw.%s", hd.getLastIndexPeerSaw(),
+                            hd.isConsistentWithChain() ? "" : "in", System.getProperty("line.separator")));
+        }
+
+        if(inconsistencyFlag)
+        {
+            String part1 = String.format("You and %s are seeing different views of the conversation.",
+                    sender);
+
+            System.out.println(String.format("+++++%s%s%s%s+++++", System.getProperty("line.separator"),
+                    part1, System.getProperty("line.separator"), builder.toString(),
+                    System.getProperty("line.separator")));
+        }
+
     }
 }

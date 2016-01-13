@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.io.*;
 import java.nio.charset.Charset;
 //git
+import ChatCommons.IChatSender;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -127,8 +128,7 @@ public class XmppManager implements ICommManager {
 
 		SmackConfiguration.setPacketReplyTimeout(packetReplyTimeout);
 
-		//config = new ConnectionConfiguration(server, port);
-		config = new ConnectionConfiguration("michael-pc", port);
+		config = new ConnectionConfiguration(server, port);
 		config.setSASLAuthenticationEnabled(false);
 		config.setSecurityMode(SecurityMode.disabled);
 
@@ -245,7 +245,7 @@ public class XmppManager implements ICommManager {
 		List<String> friendList = new ArrayList<String>();
 		String line;
 		try (
-				InputStream fis = new FileInputStream("C:\\crypto\\friends.txt");
+				InputStream fis = new FileInputStream("C:\\ks\\friends.txt");
 				InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
 				BufferedReader br = new BufferedReader(isr);
 		) {

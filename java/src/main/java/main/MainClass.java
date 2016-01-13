@@ -210,7 +210,9 @@ public class MainClass {
         try {
             conv3.receiveMessage("party1", messages.get("party3"));
             DecryptedPackage dp = conv2.receiveMessage("party1", messages.get("party2"));
+
             display("party2", "party1", dp);
+
             conv1.sendMessage("Hi party2!!");
             conv3.receiveMessage("party1", messages.get("party3"));
             dp = conv2.receiveMessage("party1", messages.get("party2"));

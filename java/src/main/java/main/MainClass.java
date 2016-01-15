@@ -216,25 +216,26 @@ public class MainClass {
             dp = conv2.receiveMessage("party1", messages.get("party2"));
             display("party2", "party1", dp);
             conv1.sendMessage("Hi party2!!!");
-            //conv1.sendMessage("Hi party2!!!!");
+            //Party 3 missed!!
             dp = conv2.receiveMessage("party1", messages.get("party2"));
             display("party2", "party1", dp);
 
             System.out.println("============");
             conv2.sendMessage("Hi party1!");
+            //Party 3 missed!!
             dp = conv1.receiveMessage("party2", messages.get("party1"));
             display("party1", "party2", dp);
 
             conv2.sendMessage("Hi party1!!");
             dp = conv1.receiveMessage("party2", messages.get("party1"));
+            //Party 3 missed!!
             display("party1", "party2", dp);
 
-            //conv2.sendMessage("lost"); //lost message
-            //conv1.sendMessage("lost"); //lost message
 
             //After one is gone
             conv1.sendMessage("sup");
             dp = conv2.receiveMessage("party1", messages.get("party2"));
+            //Party 3 missed!!
             display("party2", "party1", dp);
 
             conv2.sendMessage("sup");
@@ -244,14 +245,31 @@ public class MainClass {
             conv3.receiveMessage("party2", messages.get("party3"));
 
             conv3.sendMessage("HI");
-            //conv3.sendMessage("HI");
-            //conv3.sendMessage("HI");
 
             dp = conv1.receiveMessage("party3", messages.get("party1"));
             display("party1", "party3", dp);
             dp = conv2.receiveMessage("party3", messages.get("party2"));
             display("party2", "party3", dp);
 
+            //party 3 missed indices 1,2 from party 2 and 3,4 from party 1
+            //They can retransmit those messages for fixing the conversation
+
+            conv2.retransmit(1);
+            conv3.receiveMessage("party2", messages.get("party3"));
+            conv2.retransmit(2);
+            conv3.receiveMessage("party2", messages.get("party3"));
+
+            conv1.retransmit(3);
+            conv3.receiveMessage("party1", messages.get("party3"));
+            conv1.retransmit(4);
+            conv3.receiveMessage("party1", messages.get("party3"));
+
+            conv3.sendMessage("fixed");
+
+            dp = conv1.receiveMessage("party3", messages.get("party1"));
+            display("party1", "party3", dp);
+            dp = conv2.receiveMessage("party3", messages.get("party2"));
+            display("party2", "party3", dp);
 
         } catch (InvalidKeyIdException e) {
             e.printStackTrace();

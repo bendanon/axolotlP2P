@@ -44,12 +44,19 @@ public class SecureConversation {
         peers.remove(peer);
     }
 
-    public void sendMessage (String content)
+    public int sendMessage (String content)
     {
         MessageHistory myHistory = conversationHistory.get(secureParty.getOwner());
         int index = myHistory.getLastChainRecord().getMessageIndex() + 1;
         myHistory.insert(content, index);
 
+        sendMessage(content, index);
+
+        return index;
+    }
+
+    private void sendMessage(String content, int index)
+    {
         String metadata = MessageMetaData.createMessageMetadata(index, conversationHistory);
 
         String fullMessage = String.format("%s%s%s", metadata, MessageMetaData.META_TRAILER, content);
@@ -62,6 +69,7 @@ public class SecureConversation {
         }
     }
 
+
     public DecryptedPackage receiveMessage (String peer, String ciphertext)
             throws InvalidKeyIdException, NoSessionException, LegacyMessageException,
             InvalidVersionException, InvalidMessageException, DuplicateMessageException,
@@ -69,6 +77,14 @@ public class SecureConversation {
 
         return processPlaintext(peer, secureParty.decrypt(peer, ciphertext));
     }
+
+    public void retransmit(int index)
+    {
+        MessageHistory myHistory = conversationHistory.get(secureParty.getOwner());
+        String messageContent = myHistory.getIndex(index).getMessageContent();
+        sendMessage(messageContent, index);
+    }
+
 
     private DecryptedPackage processPlaintext(String sender, String plaintext) {
 

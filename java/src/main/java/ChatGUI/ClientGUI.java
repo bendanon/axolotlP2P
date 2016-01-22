@@ -9,8 +9,6 @@ import java.awt.event.*;
 import java.io.FileNotFoundException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
-import main.FriendStatus;
-import org.jivesoftware.smack.packet.Presence;
 import org.whispersystems.libaxolotl.*;
 import security.conversation.DecryptedPackage;
 import security.management.SecureConversation;
@@ -38,16 +36,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	private boolean connected;
 	private int defaultPort;
 	private String defaultHost;
-	// private JList<String> lstUsers;
 	private JList<User> listOfUsers;
 	private DefaultListModel<User> listModel;
 	private XmppManager xmppManager;
+	private SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 	private JTextField tfFingerPrint;
 	private SecureParty party1 = null;
 	private JTextField tfPathKS;
 	private PersistentTrustStore store1 = null;
 	private HexHumanizer hexHumanizer = null;
-	private String originalMSG = "";
 	private SecureConversation secureConversation = null;
 
 	ClientGUI(String host, int port)
@@ -273,14 +270,10 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	{
 		try
 		{
-			SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-
 			if (party1.isSessionInitialized(sendTo))
 			{
 				secureConversation.sendMessage(text);
-				//xmppManager.sendMessage(text, sendTo, eMessageType.eNORMAL);
 				append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
-
 				tfMessage.setText("");
 			}
 			else
@@ -292,10 +285,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 					user.SetUserStatus(eUserStatus.Wait);
 					listOfUsers.updateUI();
 
-					System.out.println("Try create key exchange with " + user.GetUserName());
 					String keyExchange = party1.createKeyExchangeMessage(user.GetUserName());
-					System.out.println("Send the key exchange to " +user.GetUserName());
-
 					xmppManager.sendMessage(keyExchange, user.GetUserName(), eMessageType.eKEY_START);
 				}
 			}
@@ -332,7 +322,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		{
 			party1 = new SecureParty(userName, store1, new FingerprintWG());
 			secureConversation = new SecureConversation(party1, this);
-	} catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -358,15 +348,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 	private void ChangeGUIWhenLoginPressed()
 	{
-      /*
-      String portNumber = tfPort.getText().trim();
-      try {
-         int port = Integer.parseInt(portNumber);
-         //TODO: Send the port from the GUI to XmppManager
-      } catch (Exception en) {
-         return;
-      }*/
-
 		tfMessage.setText("");
 		label.setText("Enter your message below");
 		tfMessage.setEnabled(true);
@@ -380,7 +361,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		tfUser.setEditable(false);
 		tfPassword.setEditable(false);
 		tfPathKS.setEditable(false);
-
 		tfMessage.addActionListener(this);
 	}
 
@@ -390,7 +370,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		{
 			xmppManager = XmppManager.createManager(tfServer.getText());
 			xmppManager.addNotifier(this);
-			xmppManager.userLogin(userName, password);//FriendStatus[] friendsStat = xmppManager.getBuddiesStats();
+			xmppManager.userLogin(userName, password);
 
 			RemoveUserFromList(userName);
 			System.out.println("Connected User Name is: " + userName);
@@ -414,16 +394,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 	private void ConnectedWithFriends(String userName) throws XMPPException
 	{
+		userName = userName.toLowerCase();
 		if (userName.equals("user1"))
 		{
-			//xmppManager.connectToFriend("user2");
 			secureConversation.addPeer("user2");
 			secureConversation.addPeer("user3");
 
 		}
 		else if (userName.equals("user2"))
 		{
-			//xmppManager.connectToFriend("user1");
 			secureConversation.addPeer("user1");
 			secureConversation.addPeer("user3");
 		}
@@ -449,45 +428,49 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			{
 				return listModel.indexOf(currUser);
 			}
-
-			//xmppManager.getBuddiesStats();
 		}
 
 		return -1;
 	}
 
+	private User GetUserFromName(String userName)
+	{
+		String from = userName.split("@")[0];
+		int index = GetIndexOfUserName(from);
+		return listOfUsers.getModel().getElementAt(index);
+	}
+
+	private void UpdateUserStauts(User user, eUserStatus status)
+	{
+		user.SetUserStatus(status);
+		listOfUsers.updateUI();
+	}
+
 	public void RecieveMessage(String from, String Message,eMessageType messageType)
 	{
-		from = from.split("@")[0];
-		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-		int index = GetIndexOfUserName(from);
-		User fromUser = listOfUsers.getModel().getElementAt(index);
+		User fromUser = GetUserFromName(from);
 
 		switch (messageType)
 		{
 			case eKEY_START:
 			{
-				try {
+				try
+				{
 					if (party1.consumeKeyExchangeMessage(from, Message))
-                    {
-                        fromUser.SetUserStatus(eUserStatus.Trusted);
-                        System.out.println("Started trusted conversation with: " + from + "\n");
-                        append("Started trusted conversation with: " + from + "\n");
-                    }
-                    else
-                    {
-                        fromUser.SetUserStatus(eUserStatus.UnTrusted);
-                        System.out.println("Started untrusted conversation with: " + from + "\n");
-                        append("Started untrusted conversation with: " + from + "\n");
-                    }
-
-					listOfUsers.updateUI();
+					{
+						UpdateUserStauts(fromUser, eUserStatus.Trusted);
+						append("Started trusted conversation with: " + from + "\n");
+					}
+					else
+					{
+						UpdateUserStauts(fromUser, eUserStatus.UnTrusted);
+						append("Started untrusted conversation with: " + from + "\n");
+					}
 
 					String keyExchange = party1.createKeyExchangeMessage(from);
 					xmppManager.sendMessage(keyExchange, from, eMessageType.eKEY_RESPONSE);
-
-
-				} catch (UnrecoverableEntryException e) {
+				}
+				catch (UnrecoverableEntryException e) {
 					e.printStackTrace();
 				} catch (NoSuchAlgorithmException e) {
 					e.printStackTrace();
@@ -505,36 +488,26 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			}
 			case eKEY_RESPONSE:
 			{
-				try {
+				try
+				{
 					if (party1.consumeKeyExchangeMessage(from, Message))
 					{
-						fromUser.SetUserStatus(eUserStatus.Trusted);
-						System.out.println("Started trusted conversation with: " + from + "\n");
+						UpdateUserStauts(fromUser, eUserStatus.Trusted);
 						append("Started trusted conversation with: " + from + "\n");
 					}
 					else
 					{
-						fromUser.SetUserStatus(eUserStatus.UnTrusted);
-						System.out.println("Started untrusted conversation with: " + from + "\n");
+						UpdateUserStauts(fromUser, eUserStatus.UnTrusted);
 						append("Started untrusted conversation with: " + from + "\n");
 					}
 
-					listOfUsers.updateUI();
-
 					if (party1.isSessionInitialized(from))
 					{
-						//String encyptMsg = party1.encrypt(from, tfMessage.getText());
-						//System.out.println("Encrypted msg " + encyptMsg);
-
 						String msg = tfMessage.getText();
 						secureConversation.sendMessage(msg);
-
 						append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
-
 						tfMessage.setText("");
 					}
-
-
 				} catch (UnrecoverableEntryException e) {
 					e.printStackTrace();
 				} catch (NoSuchAlgorithmException e) {
@@ -549,23 +522,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 				break;
 			}
-			case eKEY_FINISHED:
-			{
-
-
-				break;
-			}
 			case eNORMAL:
 			{
 				try
 				{
-					System.out.println("Receive encrypted msg " + Message);
 					DecryptedPackage dp= secureConversation.receiveMessage(from, Message);
-
 					String display = String.format("%s[%d/%d]:%s", from, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
-
 					append(dateFormat.format(new Date()) + " " +  display + "\n");
-				} catch (Exception ex)
+				}
+				catch (Exception ex)
 				{
 					ex.printStackTrace();
 				}

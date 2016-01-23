@@ -28,10 +28,10 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	private JLabel label;
 	private JLabel labelKS;
 	private JTextField tfMessage;
-	private JTextField tfServer, tfPort;
+	private JTextField tfServer, tfPort, tfRetransmit;
 	private JPasswordField tfPassword;
 	private JTextField tfUser;
-	private JButton login, logout, whoIsIn, btnCreateKS;
+	private JButton login, retransmitBtn, whoIsIn, btnCreateKS;
 	private JTextArea ta;
 	private boolean connected;
 	private int defaultPort;
@@ -53,8 +53,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		defaultPort = port;
 		defaultHost = host;
 
+		tfRetransmit = new JTextField();
 		// The NorthPanel with:
-		JPanel northPanel = new JPanel(new GridLayout(6,1));
+		JPanel northPanel = new JPanel(new GridLayout(5,1));
 		// the server name anmd the port number
 		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
 		// the two JTextField with default value for server address and port number
@@ -83,10 +84,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		northPanel.add(serverAndPort);
 		northPanel.add(userAndPasswordPanel);
 
-		labelKS = new JLabel("Enter your key store path directory", SwingConstants.CENTER);
-		northPanel.add(labelKS);
+		JPanel ksPanel = new JPanel(new GridLayout(1,5, 1, 3));
+		ksPanel.add(new JLabel("Key Store Path:"));
 		tfPathKS = new JTextField("C:\\ks");
-		northPanel.add(tfPathKS);
+		ksPanel.add(tfPathKS);
+		ksPanel.add(new JLabel("ReTransmit ID:  "));
+		ksPanel.add(tfRetransmit);
+		ksPanel.add(new JLabel(""));
+
+		northPanel.add(ksPanel);
 
 		label = new JLabel("Login and then Enter your message below", SwingConstants.CENTER);
 		northPanel.add(label);
@@ -134,9 +140,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		// the 3 buttons
 		login = new JButton("Login");
 		login.addActionListener(this);
-		logout = new JButton("Logout");
-		logout.addActionListener(this);
-		logout.setEnabled(false);
+		retransmitBtn = new JButton("ReTransmit");
+		retransmitBtn.addActionListener(this);
+		retransmitBtn.setEnabled(false);
 		whoIsIn = new JButton("Witness");
 		whoIsIn.addActionListener(this);
 		whoIsIn.setEnabled(false);
@@ -149,7 +155,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		JPanel buttonPanel = new JPanel(new GridLayout(1,4));
 
 		buttonPanel.add(login);
-		buttonPanel.add(logout);
+		buttonPanel.add(retransmitBtn);
 		buttonPanel.add(whoIsIn);
 		buttonPanel.add(btnCreateKS);
 		southPanel.add(tfFingerPrint);
@@ -175,7 +181,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	// we reset our buttons, label, textfield
 	void connectionFailed() {
 		login.setEnabled(true);
-		logout.setEnabled(false);
+		retransmitBtn.setEnabled(false);
 		whoIsIn.setEnabled(false);
 		// reset port number and host name as a construction time
 		tfPort.setText("" + defaultPort);
@@ -200,9 +206,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		return new JList<>(listUsers);
 	}
 
-	private void Logout()
+	private void Retransmit()
 	{
-		xmppManager.disconnect();
+
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -214,9 +220,10 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 			tfMessage.setText("");
 		}
-		else if (o == logout)
+		else if (o == retransmitBtn)
 		{
-			Logout();			}
+			Retransmit();
+		}
 		else if (o == btnCreateKS)
 		{
 			String userName = tfUser.getText().trim();
@@ -354,7 +361,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		connected = true;
 
 		login.setEnabled(false);
-		logout.setEnabled(true);
+		retransmitBtn.setEnabled(true);
 		whoIsIn.setEnabled(true);
 		tfServer.setEditable(false);
 		tfPort.setEditable(false);

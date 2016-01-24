@@ -211,54 +211,54 @@ public class MainClass {
             conv3.receiveMessage("party1", messages.get("party3"));
             DecryptedPackage dp = conv2.receiveMessage("party1", messages.get("party2"));
 
-            display("party2", "party1", dp);
+            System.out.println(display("party2", "party1", dp));
 
             conv1.sendMessage("Hi party2!!");
             conv3.receiveMessage("party1", messages.get("party3"));
             dp = conv2.receiveMessage("party1", messages.get("party2"));
-            display("party2", "party1", dp);
+            System.out.println(display("party2", "party1", dp));
             conv1.sendMessage("Hi party2!!!");
             //Party 3 missed!!
             dp = conv2.receiveMessage("party1", messages.get("party2"));
-            display("party2", "party1", dp);
+            System.out.println(display("party2", "party1", dp));
 
             System.out.println("============");
             conv2.sendMessage("Hi party1!");
             //Party 3 missed!!
             dp = conv1.receiveMessage("party2", messages.get("party1"));
-            display("party1", "party2", dp);
+            System.out.println(display("party1", "party2", dp));
 
             conv2.sendMessage("Hi party1!!");
             dp = conv1.receiveMessage("party2", messages.get("party1"));
             //Party 3 missed!!
-            display("party1", "party2", dp);
+            System.out.println(display("party1", "party2", dp));
 
 
             //After one is gone
             conv1.sendMessage("sup");
             dp = conv2.receiveMessage("party1", messages.get("party2"));
             //Party 3 missed!!
-            display("party2", "party1", dp);
+            System.out.println(display("party2", "party1", dp));
 
             conv2.sendMessage("sup");
             dp = conv1.receiveMessage("party2", messages.get("party1"));
-            display("party1", "party2", dp);
+            System.out.println(display("party1", "party2", dp));
 
             conv3.receiveMessage("party2", messages.get("party3"));
 
             conv3.sendMessage("HI");
 
             dp = conv1.receiveMessage("party3", messages.get("party1"));
-            display("party1", "party3", dp);
+            System.out.println(display("party1", "party3", dp));
             dp = conv2.receiveMessage("party3", messages.get("party2"));
-            display("party2", "party3", dp);
+            System.out.println(display("party2", "party3", dp));
 
             //party 3 missed indices 1,2 from party 2 and 3,4 from party 1
             //They can retransmit those messages for fixing the conversation
 
             conv2.retransmit(1);
             conv3.receiveMessage("party2", messages.get("party3"));
-            display("party1","party2", conv1.receiveMessage("party2", messages.get("party1")));
+            System.out.println(display("party1","party2", conv1.receiveMessage("party2", messages.get("party1"))));
             conv2.retransmit(2);
             conv3.receiveMessage("party2", messages.get("party3"));
 
@@ -270,9 +270,9 @@ public class MainClass {
             conv3.sendMessage("fixed");
 
             dp = conv1.receiveMessage("party3", messages.get("party1"));
-            display("party1", "party3", dp);
+            System.out.println(display("party1", "party3", dp));
             dp = conv2.receiveMessage("party3", messages.get("party2"));
-            display("party2", "party3", dp);
+            System.out.println(display("party2", "party3", dp));
 
         } catch (InvalidKeyIdException e) {
             e.printStackTrace();
@@ -294,9 +294,9 @@ public class MainClass {
 
     }
 
-    private static void display(String screen, String sender, DecryptedPackage dp)
+    private static String display(String screen, String sender, DecryptedPackage dp)
     {
-        String display = String.format("%s screen> %s[%d/%d]:%s",screen, sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
+        String display = String.format("%s[%d/%d]:%s", sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
         System.out.println(display);
 
         ListIterator<HistoryDisagreement> hdlist = dp.getHistoryDisagreementIterator();
@@ -317,19 +317,20 @@ public class MainClass {
                     sender, hd.getPeerName(), hd.getLastIndexPeerSaw()));
 
             builder.append(
-                    String.format(" Up to %d it is %sconsistent with what you saw.%s", hd.getLastIndexPeerSaw(),
-                            hd.isConsistentWithChain() ? "" : "in", System.getProperty("line.separator")));
+                    String.format("(The content is %sconsistent with what you saw)%s", hd.isConsistentWithChain() ?
+                                    "" : "in", System.getProperty("line.separator")));
         }
 
         if(inconsistencyFlag)
         {
-            String part1 = String.format("You (%s) and %s are seeing different views of the conversation.",
-                    screen, sender);
+            String part1 = String.format("You and %s are seeing different views of the conversation.", sender);
 
-            System.out.println(String.format("+++++%s%s%s%s+++++", System.getProperty("line.separator"),
+            return String.format("+++++%s%s%s%s+++++", System.getProperty("line.separator"),
                     part1, System.getProperty("line.separator"), builder.toString(),
-                    System.getProperty("line.separator")));
+                    System.getProperty("line.separator"));
         }
+
+        return display;
 
     }
 }

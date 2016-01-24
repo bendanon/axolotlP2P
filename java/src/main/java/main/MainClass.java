@@ -258,6 +258,7 @@ public class MainClass {
 
             conv2.retransmit(1);
             conv3.receiveMessage("party2", messages.get("party3"));
+            display("party1","party2", conv1.receiveMessage("party2", messages.get("party1")));
             conv2.retransmit(2);
             conv3.receiveMessage("party2", messages.get("party3"));
 

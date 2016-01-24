@@ -6,10 +6,7 @@ import org.whispersystems.libaxolotl.*;
 import security.conversation.*;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by ben on 09/12/15.
@@ -37,6 +34,12 @@ public class SecureConversation {
 
         return true;
     }
+
+    public ListIterator<String> getPeerIterator()
+    {
+        return peers.listIterator();
+    }
+
 
     public void removePeer(String peer)
     {
@@ -68,7 +71,6 @@ public class SecureConversation {
             }
         }
     }
-
 
     public DecryptedPackage receiveMessage (String peer, String ciphertext)
             throws InvalidKeyIdException, NoSessionException, LegacyMessageException,

@@ -198,13 +198,30 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		connected = false;
 	}
 
-	private void Retransmit()
+	private void Retransmit() throws InterruptedException
 	{
-		listOfUsers.updateUI();
+		String[] range = tfRetransmit.getText().split("-");
 
-		int index = Integer.parseInt(tfRetransmit.getText());
+		if (range.length == 1)
+		{
+			int index = Integer.parseInt(range[0]);
 
-		secureConversation.retransmit(index);
+			secureConversation.retransmit(index);
+		}
+		else
+		{
+			int from = Integer.parseInt(range[0]);
+			int to = Integer.parseInt(range[1]);
+
+			for (int i=from; i<=to; i++)
+			{
+				secureConversation.retransmit(i);
+				Thread.sleep(50);
+			}
+
+		}
+
+		tfRetransmit.setText("");
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -224,7 +241,11 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 		else if (o == retransmitBtn)
 		{
-			Retransmit();
+			try {
+				Retransmit();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 		}
 		else if (o == btnCreateKS)
 		{
@@ -271,7 +292,10 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 		else if (connected)  // Send msg
 		{
-			SendMSG(listOfUsers.getSelectedValue().GetUserName(),tfMessage.getText());
+			if (!tfMessage.getText().equals(""))
+			{
+				SendMSG(tfMessage.getText());
+			}
 		}
 	}
 
@@ -279,20 +303,32 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	{
 		try
 		{
-			java.util.List<User> users = listOfUsers.getSelectedValuesList();
+			//java.util.List<User> users = listOfUsers.getSelectedValuesList();
+			Enumeration<User> users = listModel.elements();
 
-			for (User user : users)
+			while (users.hasMoreElements())
 			{
-				user.SetUserStatus(eUserStatus.Wait);
-				listOfUsers.updateUI();
+				User user = users.nextElement();
 
-				String keyExchange = party1.createKeyExchangeMessage(user.GetUserName());
-				xmppManager.sendMessage(keyExchange, user.GetUserName(), eMessageType.eKEY_START);
+				if (!user.GetUserName().equals(currentUser.GetUserName()))
+				{
+					if (!party1.isSessionInitialized(user.GetUserName()))
+					{
+						user.SetUserStatus(eUserStatus.Wait);
+						listOfUsers.updateUI();
+
+						String keyExchange = party1.createKeyExchangeMessage(user.GetUserName());
+						xmppManager.sendMessage(keyExchange, user.GetUserName(), eMessageType.eKEY_START);
+					}
+				}
 			}
 
 			listOfUsers.updateUI();
 
 			btnStartSession.setEnabled(false);
+
+			tfMessage.setText("");
+			tfMessage.setEditable(true);
 		}
  		catch (Exception ex)
 		{
@@ -300,13 +336,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 	}
 
-	private void SendMSG(String sendTo, String text)
+	private void SendMSG(String text)
 	{
+		System.out.println("Send method entry");
+
 		try
 		{
 			int msgId = secureConversation.sendMessage(text);
 
-			append(dateFormat.format(new Date()) + " " + tfUser.getText() + String.format("[%d/%d]:",msgId,msgId) + tfMessage.getText() + "\n");
+			append(dateFormat.format(new Date()) + " " + tfUser.getText() + String.format("[%d/%d]: ",msgId,msgId) + tfMessage.getText() + "\n");
 			tfMessage.setText("");
 		}
 		catch (Exception ex) {
@@ -415,6 +453,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 				if (!name.equals(currentUser.GetUserName()))
 				{
 					listModel.addElement(new User(name, eUserStatus.Offline));
+					secureConversation.addPeer(name);
 				}
 			}
 		}
@@ -428,8 +467,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 		else
 		{
-			tfMessage.setText("");
-			tfMessage.setEditable(true);
+			tfMessage.setText("Press Start Session");
+			tfMessage.setEditable(false);
 		}
 
 		listOfUsers.updateUI();
@@ -513,12 +552,12 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 					if (party1.consumeKeyExchangeMessage(from, Message))
 					{
 						UpdateUserStauts(fromUser, eUserStatus.Trusted);
-						append("\n" + "Started trusted conversation with: " + from);
+						append("\n" + "Started trusted conversation with " + from +"\n");
 					}
 					else
 					{
 						UpdateUserStauts(fromUser, eUserStatus.UnTrusted);
-						append("\n" + "Started untrusted conversation with: " + from);
+						append("\n" + "Started untrusted conversation with " + from +"\n");
 					}
 
 					listOfUsers.updateUI();
@@ -549,12 +588,12 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 					if (party1.consumeKeyExchangeMessage(from, Message))
 					{
 						UpdateUserStauts(fromUser, eUserStatus.Trusted);
-						append("\n" +"Started trusted conversation with: " + from );
+						append("\n" +"Started trusted conversation with " + from +"\n" );
 					}
 					else
 					{
 						UpdateUserStauts(fromUser, eUserStatus.UnTrusted);
-						append("\n" + "Started untrusted conversation with: " + from);
+						append("\n" + "Started untrusted conversation with " + from +"\n");
 					}
 
 					listOfUsers.updateUI();
@@ -590,44 +629,39 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 	}
 
-
 	private String display(String sender, DecryptedPackage dp)
 	{
-		StringBuilder builder = new StringBuilder(1000);
-		builder.append(dateFormat.format(new Date()) + " ");
-		builder.append(String.format("%s[%d/%d]:%s \n", sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent()));
+		String display = String.format(dateFormat.format(new Date()) + " " + "%s[%d/%d]: %s", sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent() +"\n");
 
 		ListIterator<HistoryDisagreement> hdlist = dp.getHistoryDisagreementIterator();
 
 		boolean inconsistencyFlag = false;
-		if(hdlist.hasNext())
-		{
+		if (hdlist.hasNext()) {
 			inconsistencyFlag = true;
 		}
 
-		while(hdlist.hasNext())
-		{
+		StringBuilder builder = new StringBuilder(1000);
+
+		while (hdlist.hasNext()) {
 			HistoryDisagreement hd = hdlist.next();
 
-			builder.append(String.format("The last message %s saw from %s is %d. \n",
+			builder.append(String.format("The last message %s saw from %s is %d.",
 					sender, hd.getPeerName(), hd.getLastIndexPeerSaw()));
 
 			builder.append(
-					String.format(" Up to %d it is %sconsistent with what you saw.%s \n", hd.getLastIndexPeerSaw(),
-							hd.isConsistentWithChain() ? "" : "in", System.getProperty("line.separator")));
+					String.format("(The content is %sconsistent with what you saw)%s", hd.isConsistentWithChain() ?
+							"" : "in", System.getProperty("line.separator")));
 		}
 
-		if(inconsistencyFlag)
-		{
-			String part1 = String.format("You and %s are seeing different views of the conversation.",
-					 sender);
+		if (inconsistencyFlag) {
+			String part1 = String.format("You and %s are seeing different views of the conversation.", sender);
 
-			builder.append(String.format("+++++%s%s%s%s+++++ \n", System.getProperty("line.separator"),
+			display += String.format("+++++%s%s%s%s+++++\n", System.getProperty("line.separator"),
 					part1, System.getProperty("line.separator"), builder.toString(),
-					System.getProperty("line.separator")));
+					System.getProperty("line.separator"));
 		}
 
-		return builder.toString();
+		return display;
 	}
 
 	@Override

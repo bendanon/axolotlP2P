@@ -666,7 +666,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 //
 		return display;
 	}
-
+//
 	@Override
 	public void sendMessage(String peer, String Message)
 	{

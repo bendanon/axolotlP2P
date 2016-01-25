@@ -1,6 +1,7 @@
 package ChatGUI;
 
 import ChatCommons.*;
+import main.FriendStatus;
 import main.XmppManager;
 import org.jivesoftware.smack.XMPPException;
 import javax.swing.*;
@@ -11,6 +12,7 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 import org.whispersystems.libaxolotl.*;
 import security.conversation.DecryptedPackage;
+import security.conversation.HistoryDisagreement;
 import security.management.SecureConversation;
 import security.management.SecureParty;
 import security.trust.concrete.FingerprintWG;
@@ -22,6 +24,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.util.Enumeration;
+import java.util.ListIterator;
 
 public class ClientGUI extends JFrame implements ActionListener, INotifier, IChatSender
 {
@@ -31,7 +34,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	private JTextField tfServer, tfPort, tfRetransmit;
 	private JPasswordField tfPassword;
 	private JTextField tfUser;
-	private JButton login, retransmitBtn, whoIsIn, btnCreateKS;
+	private JButton login, retransmitBtn, whoIsIn, btnCreateKS, btnRefresh, btnStartSession;
 	private JTextArea ta;
 	private boolean connected;
 	private int defaultPort;
@@ -46,6 +49,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	private PersistentTrustStore store1 = null;
 	private HexHumanizer hexHumanizer = null;
 	private SecureConversation secureConversation = null;
+	private String tempMsg= "";
+	private User currentUser = null;
 
 	ClientGUI(String host, int port)
 	{
@@ -107,14 +112,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
 		JPanel centerPanel = new JPanel(new GridLayout(1,2));
 
-		User user1 = new User("user1", eUserStatus.Offline);
-		User user2 = new User("user2", eUserStatus.Offline);
-		User user3 = new User("user3", eUserStatus.Offline);
 		listModel = new DefaultListModel<>();
-		listModel.addElement(user1);
-		listModel.addElement(user2);
-		listModel.addElement(user3);
-
 		listOfUsers = new JList<>(listModel);
 		centerPanel.add(new JScrollPane(listOfUsers));
 		listOfUsers.setCellRenderer(new UserRenderer());
@@ -148,13 +146,19 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		whoIsIn.setEnabled(false);
 		btnCreateKS = new JButton("Create KS");
 		btnCreateKS.addActionListener(this);
+		btnRefresh = new JButton("Refresh");
+		btnStartSession = new JButton("Start Session");
+		btnStartSession.addActionListener(this);
+		btnRefresh.addActionListener(this);
 		tfFingerPrint = new JTextField("Your Finger Print...");
 		tfFingerPrint.setEditable(false);
 		tfFingerPrint.setBackground(Color.WHITE);
-		JPanel southPanel = new JPanel(new GridLayout(2,2));
-		JPanel buttonPanel = new JPanel(new GridLayout(1,4));
+		JPanel southPanel = new JPanel(new GridLayout(2,1));
+		JPanel buttonPanel = new JPanel(new GridLayout(2,2));
 
 		buttonPanel.add(login);
+		buttonPanel.add(btnRefresh);
+		buttonPanel.add(btnStartSession);
 		buttonPanel.add(retransmitBtn);
 		buttonPanel.add(whoIsIn);
 		buttonPanel.add(btnCreateKS);
@@ -194,21 +198,13 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		connected = false;
 	}
 
-	private JList GetFriendsList()
-	{
-		String listUsers[] =
-				{
-						"user1",
-						"user2",
-						"user3",
-				};
-
-		return new JList<>(listUsers);
-	}
-
 	private void Retransmit()
 	{
+		listOfUsers.updateUI();
 
+		int index = Integer.parseInt(tfRetransmit.getText());
+
+		secureConversation.retransmit(index);
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -217,8 +213,14 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		if (o == login)
 		{
 			Login();
-
-			tfMessage.setText("");
+		}
+		else if (o == btnStartSession)
+		{
+			StartSession();
+		}
+		else if (o == btnRefresh)
+		{
+			RefreshList();
 		}
 		else if (o == retransmitBtn)
 		{
@@ -273,30 +275,41 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 	}
 
+	private void StartSession()
+	{
+		try
+		{
+			java.util.List<User> users = listOfUsers.getSelectedValuesList();
+
+			for (User user : users)
+			{
+				user.SetUserStatus(eUserStatus.Wait);
+				listOfUsers.updateUI();
+
+				String keyExchange = party1.createKeyExchangeMessage(user.GetUserName());
+				xmppManager.sendMessage(keyExchange, user.GetUserName(), eMessageType.eKEY_START);
+			}
+
+			listOfUsers.updateUI();
+
+			btnStartSession.setEnabled(false);
+		}
+ 		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+
 	private void SendMSG(String sendTo, String text)
 	{
 		try
 		{
-			if (party1.isSessionInitialized(sendTo))
-			{
-				secureConversation.sendMessage(text);
-				append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
-				tfMessage.setText("");
-			}
-			else
-			{
-				java.util.List<User> users = listOfUsers.getSelectedValuesList();
+			int msgId = secureConversation.sendMessage(text);
 
-				for (User user : users)
-				{
-					user.SetUserStatus(eUserStatus.Wait);
-					listOfUsers.updateUI();
-
-					String keyExchange = party1.createKeyExchangeMessage(user.GetUserName());
-					xmppManager.sendMessage(keyExchange, user.GetUserName(), eMessageType.eKEY_START);
-				}
-			}
-		} catch (Exception ex) {
+			append(dateFormat.format(new Date()) + " " + tfUser.getText() + String.format("[%d/%d]:",msgId,msgId) + tfMessage.getText() + "\n");
+			tfMessage.setText("");
+		}
+		catch (Exception ex) {
 			System.out.println("System Error");
 			ex.printStackTrace();
 		}
@@ -307,6 +320,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 		String userName = tfUser.getText().trim();
 		String password = new String(tfPassword.getPassword());
+
+		currentUser = new User(userName, eUserStatus.Offline);
 
 		if (store1 == null)
 		{
@@ -336,6 +351,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		OpenXMPPConnection(userName,password);
 
 		GenerateWitness();
+
+		RefreshList();
 	}
 
 	private void GenerateWitness()
@@ -378,11 +395,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			xmppManager = XmppManager.createManager(tfServer.getText());
 			xmppManager.addNotifier(this);
 			xmppManager.userLogin(userName, password);
-
-			RemoveUserFromList(userName);
-			System.out.println("Connected User Name is: " + userName);
-
-			ConnectedWithFriends(userName);
 		}
 		catch (XMPPException e)
 		{
@@ -391,12 +403,43 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 	}
 
+	private void RefreshList()
+	{
+		listModel.clear();
+		FriendStatus[] friends = xmppManager.getBuddiesStats();
+		for (int i=0; i<friends.length; i++)
+		{
+			if (friends[i].getStatus().equals("online"))
+			{
+				String name = friends[i].getName();
+				if (!name.equals(currentUser.GetUserName()))
+				{
+					listModel.addElement(new User(name, eUserStatus.Offline));
+				}
+			}
+		}
+
+		int size = listModel.getSize();
+
+		if (listModel.getSize() == 0)
+		{
+			tfMessage.setText("All your friends are offline");
+			tfMessage.setEditable(false);
+		}
+		else
+		{
+			tfMessage.setText("");
+			tfMessage.setEditable(true);
+		}
+
+		listOfUsers.updateUI();
+	}
+
 	private void RemoveUserFromList(String userName)
 	{
 		int index = GetIndexOfUserName(userName);
 		listModel.remove(index);
 		listOfUsers.updateUI();
-
 	}
 
 	private void ConnectedWithFriends(String userName) throws XMPPException
@@ -450,11 +493,13 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	private void UpdateUserStauts(User user, eUserStatus status)
 	{
 		user.SetUserStatus(status);
-		listOfUsers.updateUI();
+		//listOfUsers.updateUI();
 	}
 
 	public void RecieveMessage(String from, String Message,eMessageType messageType)
 	{
+		System.out.println("Got msg from: " + from + ". Type: " + messageType);
+
 		User fromUser = GetUserFromName(from);
 
 		switch (messageType)
@@ -463,16 +508,20 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			{
 				try
 				{
+					System.out.println("Guy 1");
+
 					if (party1.consumeKeyExchangeMessage(from, Message))
 					{
 						UpdateUserStauts(fromUser, eUserStatus.Trusted);
-						append("Started trusted conversation with: " + from + "\n");
+						append("\n" + "Started trusted conversation with: " + from);
 					}
 					else
 					{
 						UpdateUserStauts(fromUser, eUserStatus.UnTrusted);
-						append("Started untrusted conversation with: " + from + "\n");
+						append("\n" + "Started untrusted conversation with: " + from);
 					}
+
+					listOfUsers.updateUI();
 
 					String keyExchange = party1.createKeyExchangeMessage(from);
 					xmppManager.sendMessage(keyExchange, from, eMessageType.eKEY_RESPONSE);
@@ -500,21 +549,16 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 					if (party1.consumeKeyExchangeMessage(from, Message))
 					{
 						UpdateUserStauts(fromUser, eUserStatus.Trusted);
-						append("Started trusted conversation with: " + from + "\n");
+						append("\n" +"Started trusted conversation with: " + from );
 					}
 					else
 					{
 						UpdateUserStauts(fromUser, eUserStatus.UnTrusted);
-						append("Started untrusted conversation with: " + from + "\n");
+						append("\n" + "Started untrusted conversation with: " + from);
 					}
 
-					if (party1.isSessionInitialized(from))
-					{
-						String msg = tfMessage.getText();
-						secureConversation.sendMessage(msg);
-						append(dateFormat.format(new Date()) + " " + tfUser.getText() + ": " + tfMessage.getText() + "\n");
-						tfMessage.setText("");
-					}
+					listOfUsers.updateUI();
+
 				} catch (UnrecoverableEntryException e) {
 					e.printStackTrace();
 				} catch (NoSuchAlgorithmException e) {
@@ -534,8 +578,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 				try
 				{
 					DecryptedPackage dp= secureConversation.receiveMessage(from, Message);
-					String display = String.format("%s[%d/%d]:%s", from, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
-					append(dateFormat.format(new Date()) + " " +  display + "\n");
+					//String display = String.format("%s[%d/%d]:%s", from, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
+					append(display(from,dp));
 				}
 				catch (Exception ex)
 				{
@@ -544,6 +588,46 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 				break;
 			}
 		}
+	}
+
+
+	private String display(String sender, DecryptedPackage dp)
+	{
+		StringBuilder builder = new StringBuilder(1000);
+		builder.append(dateFormat.format(new Date()) + " ");
+		builder.append(String.format("%s[%d/%d]:%s \n", sender, dp.getIndex(), dp.getLastChainIndex(), dp.getContent()));
+
+		ListIterator<HistoryDisagreement> hdlist = dp.getHistoryDisagreementIterator();
+
+		boolean inconsistencyFlag = false;
+		if(hdlist.hasNext())
+		{
+			inconsistencyFlag = true;
+		}
+
+		while(hdlist.hasNext())
+		{
+			HistoryDisagreement hd = hdlist.next();
+
+			builder.append(String.format("The last message %s saw from %s is %d. \n",
+					sender, hd.getPeerName(), hd.getLastIndexPeerSaw()));
+
+			builder.append(
+					String.format(" Up to %d it is %sconsistent with what you saw.%s \n", hd.getLastIndexPeerSaw(),
+							hd.isConsistentWithChain() ? "" : "in", System.getProperty("line.separator")));
+		}
+
+		if(inconsistencyFlag)
+		{
+			String part1 = String.format("You and %s are seeing different views of the conversation.",
+					 sender);
+
+			builder.append(String.format("+++++%s%s%s%s+++++ \n", System.getProperty("line.separator"),
+					part1, System.getProperty("line.separator"), builder.toString(),
+					System.getProperty("line.separator")));
+		}
+
+		return builder.toString();
 	}
 
 	@Override

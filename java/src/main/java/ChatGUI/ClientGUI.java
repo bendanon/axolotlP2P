@@ -660,7 +660,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 					part1, System.getProperty("line.separator"), builder.toString(),
 					System.getProperty("line.separator"));
 		}
-
+//
 		return display;
 	}
 

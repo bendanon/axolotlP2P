@@ -37,6 +37,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	private JButton login, retransmitBtn, whoIsIn, btnCreateKS, btnRefresh, btnStartSession;
 	private JTextArea ta;
 	private boolean connected;
+	private JCheckBox cbDropMsg;
 	private int defaultPort;
 	private String defaultHost;
 	private JList<User> listOfUsers;
@@ -95,7 +96,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		ksPanel.add(tfPathKS);
 		ksPanel.add(new JLabel("ReTransmit ID:  "));
 		ksPanel.add(tfRetransmit);
-		ksPanel.add(new JLabel(""));
+		cbDropMsg = new JCheckBox();
+		ksPanel.add(cbDropMsg);
+
 
 		northPanel.add(ksPanel);
 
@@ -667,8 +670,20 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	@Override
 	public void sendMessage(String peer, String Message)
 	{
-		try {
-			xmppManager.sendMessage(Message,peer,eMessageType.eNORMAL);
+		try
+		{
+			if (!cbDropMsg.isSelected())
+			{
+				xmppManager.sendMessage(Message, peer, eMessageType.eNORMAL);
+			}
+			else
+			{
+				User user = listOfUsers.getSelectedValue();
+				if ((user != null) &&(!user.GetUserName().equals(peer)))
+				{
+					xmppManager.sendMessage(Message, peer, eMessageType.eNORMAL);
+				}
+			}
 		} catch (XMPPException e) {
 			e.printStackTrace();
 		}

@@ -3,9 +3,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 sourceCompatibility = 1.7
-archivesBaseName = "axolotl-java"
-version          = version_number
-group            = group_info
+archivesBaseName = "secure-chat-p2p-java"
 
 repositories {
     mavenCentral()
@@ -13,62 +11,9 @@ repositories {
 }
 
 dependencies {
-    compile "org.whispersystems:curve25519-java:${curve25519_version}"
-    compile 'com.google.protobuf:protobuf-java:2.5.0'
     compile 'jivesoftware:smack:3.1.0'
     compile 'jivesoftware:smackx:3.1.0'
-
-
-    testCompile ('junit:junit:3.8+')
-}
-
-
-test {
-    testLogging {
-        events 'passed'
-        showStandardStreams = true
-    }
-
-    include 'org/whispersystems/**'
-}
-
-signing {
-    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
-
-uploadArchives {
-    configuration = configurations.archives
-    repositories.mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-        pom.project {
-            name 'axolotl-java'
-            packaging 'jar'
-            description 'Axolotl library for Java'
-            url 'https://github.com/WhisperSystems/libaxolotl-android'
-
-            scm {
-                url 'scm:git@github.com:WhisperSystems/libaxolotl-android.git'
-                connection 'scm:git@github.com:WhisperSystems/libaxolotl-android.git'
-                developerConnection 'scm:git@github.com:WhisperSystems/libaxolotl-android.git'
-            }
-
-            licenses {
-                license {
-                    name 'GPLv3'
-                    url 'https://www.gnu.org/licenses/gpl-3.0.txt'
-                    distribution 'repo'
-                }
-            }
-
-            developers {
-                developer {
-                    name 'Moxie Marlinspike'
-                }
-            }
-        }
-    }
+    compile 'org.whispersystems:axolotl-java:1.4.2'
 }
 
 task installArchives(type: Upload) {

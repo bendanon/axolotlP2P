@@ -1,6 +1,5 @@
 package security.utils;
 
-import com.sun.xml.internal.messaging.saaj.packaging.mime.util.ASCIIUtility;
 import org.jivesoftware.smack.util.Base64;
 
 import javax.crypto.SecretKeyFactory;

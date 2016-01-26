@@ -159,7 +159,6 @@ public class XmppManager implements ICommManager {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			clearRoster();
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {

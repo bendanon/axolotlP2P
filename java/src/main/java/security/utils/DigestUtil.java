@@ -11,6 +11,12 @@ public class DigestUtil {
     public static final int HASH_SIZE = 32;
     public static final String DIGEST_ALGORITHM = "SHA-256";
 
+    /**
+     * Uses the DIGEST_ALGORITHM to digest the input.
+     * Returns the digestes result of size HASH_SIZE
+     * @param input
+     * @return
+     */
     public static synchronized byte[] digest(byte[] input)
     {
         byte[] digested = null;

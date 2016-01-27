@@ -41,6 +41,10 @@ public class RepliedMessageRecord {
         return peer;
     }
 
+    /**
+     * Serializes this message record into buffer.
+     * @param buffer
+     */
     public void serialize(ByteBuffer buffer)
     {
         //put the first field - peer name, add separator
@@ -58,6 +62,10 @@ public class RepliedMessageRecord {
         buffer.putInt(messageIndex);
     }
 
+    /**
+     * Deserializes the message record from buffer
+     * @param buffer
+     */
     public void deserialize(ByteBuffer buffer)
     {
         byte[] paddedName = new byte[SERIALIZED_NAME_SIZE];

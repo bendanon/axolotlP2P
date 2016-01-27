@@ -14,6 +14,7 @@ import security.trust.IWitnessGenerator;
 public class FingerprintWG implements IWitnessGenerator {
     @Override
     public IIdentityWitness generateWitness(IdentityKey identityKey) {
+        //We ignore the first 3 bytes which are constant for implementation reasons
         return new FingerprintWitness(identityKey.getFingerprint().substring(3));
     }
 }

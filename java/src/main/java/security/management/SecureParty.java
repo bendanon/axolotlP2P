@@ -65,6 +65,16 @@ public class SecureParty
         return witnessGenerator.generateWitness(axolotlStore.getIdentityKeyPair().getPublicKey());
     }
 
+    /**
+     * Generates an in-memory axolotl store using the trust store
+     * @return
+     * @throws CertificateException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     * @throws IOException
+     * @throws UnrecoverableEntryException
+     * @throws InvalidKeyException
+     */
     private AxolotlStore generateKeyStore() throws CertificateException, NoSuchAlgorithmException,
             KeyStoreException, IOException, UnrecoverableEntryException, InvalidKeyException {
 
@@ -95,11 +105,24 @@ public class SecureParty
         trustStore.RevokeTrustedIdentity(peer);
     }
 
+    /**
+     * Creates a unique numeric prekey id for compatibility with the axolotl library
+     * @return
+     */
     private int getSignedPrekeyId()
     {
         return (email + "signed").hashCode();
     }
 
+    /**
+     * Generates a key store, signed pair and inserts the signed pair to the store
+     * @throws CertificateException
+     * @throws InvalidKeyException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     * @throws UnrecoverableEntryException
+     * @throws IOException
+     */
     private void initializeAxolotlStore() throws CertificateException, InvalidKeyException,
             NoSuchAlgorithmException, KeyStoreException, UnrecoverableEntryException, IOException {
 
@@ -119,6 +142,11 @@ public class SecureParty
 
     }
 
+    /**
+     * Creates a key exchange message for peer
+     * @param peer the peer identifier
+     * @return
+     */
     public String createKeyExchangeMessage(String peer)
     {
         //Create new ephemeral key
@@ -151,6 +179,10 @@ public class SecureParty
         }
     }
 
+    /**
+     * @param peer the peer in question
+     * @return true if this SecureParty already has an initialized conversation with peer
+     */
     public boolean isSessionInitialized(String peer)
     {   return sessions.containsKey(peer);  }
 
@@ -225,6 +257,21 @@ public class SecureParty
     }
 
 
+    /**
+     * First tries to decrypt the given ciphertext as a WhisperMessage.
+     * If failes, tries to decrypt it as a PreKeyWhisperMessage
+     * @param peer
+     * @param ciphertext
+     * @return
+     * @throws UntrustedIdentityException
+     * @throws LegacyMessageException
+     * @throws InvalidVersionException
+     * @throws InvalidMessageException
+     * @throws DuplicateMessageException
+     * @throws InvalidKeyException
+     * @throws InvalidKeyIdException
+     * @throws NoSessionException
+     */
     public String decrypt(String peer, String ciphertext) throws UntrustedIdentityException, LegacyMessageException,
             InvalidVersionException, InvalidMessageException, DuplicateMessageException,
             InvalidKeyException, InvalidKeyIdException, NoSessionException {
@@ -238,7 +285,6 @@ public class SecureParty
                     .decrypt(new WhisperMessage(Base64.decode(ciphertext)));
 
         } catch (InvalidMessageException e) {
-
             //We failed to parse it as WhisperMessage, maybe its PreKeyWhisperMessage
             plaintext = decryptPreKeyMessage(peer, ciphertext);
 

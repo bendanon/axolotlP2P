@@ -34,6 +34,12 @@ public class MessageRecord {
         return messageIndex;
     }
 
+    /**
+     * Deeply compares repliedMessageRecord with this message record.
+     * Use this method to make sure the conversations match
+     * @param repliedMessageRecord
+     * @return
+     */
     public boolean compare(RepliedMessageRecord repliedMessageRecord) {
 
         return repliedMessageRecord.getMessageIndex() == this.getMessageIndex() &&
@@ -49,6 +55,14 @@ public class MessageRecord {
         return new RepliedMessageRecord(messageIndex, chainHash, peer);
     }
 
+    /**
+     * Generates the next message record, according to this one.
+     * This message is required for creating the next since hashOnHistory
+     * is built upon the existing conversation
+     * @param plaintext
+     * @param messageIndex
+     * @return
+     */
     public MessageRecord nextRecord(String plaintext, int messageIndex)
     {
         ByteBuffer buffer = ByteBuffer.wrap(new byte[plaintext.length() + chainHash.length]);

@@ -15,17 +15,19 @@ public class MessageHistory {
     {
         records = new ArrayList<>();
         lastChainIndex = 0;
+
+        //We use a default first entry for implementation reasons
         MessageRecord first = new MessageRecord(peer);
         records.add(first);
     }
 
+    /**
+     * Inserts the new message into its ordered place in history
+     * @param plaintext the plain text of the message
+     * @param messageIndex the index of that message
+     */
     public void insert(String plaintext, int messageIndex)
     {
-        System.out.println("*****getting" + messageIndex + "****");
-        for(MessageRecord record : records) {
-            System.out.print(record.getMessageIndex() + ",");
-        }
-        System.out.println("--->");
         int listIndexForNewMessage = 0;
         for(MessageRecord record : records)
         {
@@ -46,15 +48,13 @@ public class MessageHistory {
         reCalcHashes(listIndexForNewMessage);
 
         lastChainIndex = reCalcLastChainIndex();
-
-
-        for(MessageRecord record : records) {
-            System.out.print(record.getMessageIndex() + ",");
-        }
-        System.out.println();
-        System.out.println("*****");
     }
 
+    /**
+     * Updates the last chain index.
+     * Shoud be used after repairing the chain
+     * @return The new last chain index
+     */
     private int reCalcLastChainIndex() {
         for(int i = 0 ; i < records.size(); i++)
         {
@@ -63,6 +63,11 @@ public class MessageHistory {
         return records.size() - 1;
     }
 
+    /**
+     * Re-calculates the hashes from prevIndex to the end.
+     * Should be used for repairing the conversation history
+     * @param prevIndex The index after which the method starts
+     */
     private void reCalcHashes(int prevIndex)
     {
         MessageRecord prev = records.get(prevIndex);
@@ -80,16 +85,28 @@ public class MessageHistory {
         }
     }
 
+    /**
+     * @return the last index of the chain prefix before missing messages
+     */
     public MessageRecord getLastChainRecord()
     {
         return records.get(lastChainIndex);
     }
 
+    /**
+     * @return the last record in the list
+     */
     public MessageRecord getLastRecord()
     {
         return records.get(records.size()-1);
     }
 
+    /**
+     * Verifies if the last record some peer knows is consistent some prefix
+     * of the history chain this history instance holds
+     * @param hisLastRecord the last record held by the peer
+     * @return true if consistent
+     */
     public boolean isConsistentWithChain(RepliedMessageRecord hisLastRecord) {
         for(MessageRecord record : records)
         {
@@ -101,6 +118,10 @@ public class MessageHistory {
         return false;
     }
 
+    /**
+     * @param index desired index value
+     * @return the message record with specified message index value
+     */
     public MessageRecord getIndex(int index)
     {
         for(MessageRecord record : records)

@@ -21,7 +21,7 @@ public class StrongPassword {
     static final String ALGORITHM="PBKDF2WithHmacSHA1";
 
     /**
-     * generates amount strong passwords from password
+     * generates amount strong passwords from the seed password
      * @param password
      * @param amount
      * @return

@@ -15,6 +15,12 @@ public class HexHumanizer {
     private final HashMap<String, String> wordToHex;
 
 
+    /**
+     * Generates a dictionary from the file in dictpath.
+     * The file should contain at least DICT_SIZE words (the rest are not used)
+     * @param dictpath
+     * @throws Exception
+     */
     public HexHumanizer(String dictpath) throws Exception {
         hexToWord = new HashMap<>();
         wordToHex = new HashMap<>();
@@ -39,6 +45,11 @@ public class HexHumanizer {
     }
 
 
+    /**
+     * Translates every pair of bytes to a word from the dictionary
+     * @param hexString
+     * @return
+     */
     public String humanize(String hexString)
     {
         String humanized = "";
@@ -50,6 +61,11 @@ public class HexHumanizer {
         return humanized;
     }
 
+    /**
+     * Translates every word in the sentence to two formatted hex bytes
+     * @param sentence
+     * @return
+     */
     public String dehumanize(String sentence)
     {
         String dehumanized = "";

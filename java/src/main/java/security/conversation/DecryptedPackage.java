@@ -7,14 +7,12 @@ import java.util.ListIterator;
  * Created by ben on 30/12/15.
  */
 public class DecryptedPackage {
-    private String peer;
     private List<HistoryDisagreement> hdList;
     private DecryptedMessage decryptedMessage;
     private int lastChainIndex;
 
-    public DecryptedPackage(String peer, DecryptedMessage message,
-                            int lastChainIndex, List<HistoryDisagreement> hdList) {
-       this.peer = peer;
+    public DecryptedPackage(DecryptedMessage message, int lastChainIndex, List<HistoryDisagreement> hdList) {
+
        this.decryptedMessage = message;
        this.hdList = hdList;
        this.lastChainIndex = lastChainIndex;

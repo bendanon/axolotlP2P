@@ -123,14 +123,13 @@ public class SecureConversation {
             if(!myLastRecord.compare(hisLastRecord))
             {
                 hdList.add(new HistoryDisagreement(hisLastRecord.getRepliedPeer(),
-                        hisLastRecord.getMessageIndex(), myLastRecord.getMessageIndex(),
-                        peerHistory.isConsistentWithChain(hisLastRecord)));
+                        hisLastRecord.getMessageIndex(), peerHistory.isConsistentWithChain(hisLastRecord)));
             }
         }
 
         int lastChainIndex = conversationHistory.get(sender).getLastChainRecord().getMessageIndex();
 
-        return new DecryptedPackage(sender, message, lastChainIndex, hdList);
+        return new DecryptedPackage(message, lastChainIndex, hdList);
     }
 
 

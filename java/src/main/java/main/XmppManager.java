@@ -244,7 +244,7 @@ public class XmppManager implements ICommManager {
 		List<String> friendList = new ArrayList<String>();
 		String line;
 		try (
-				InputStream fis = new FileInputStream("C:\\ks\\friends.txt");
+				InputStream fis = new FileInputStream("/home/ben/Desktop/keystore/friends.txt");
 				InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
 				BufferedReader br = new BufferedReader(isr);
 		) {

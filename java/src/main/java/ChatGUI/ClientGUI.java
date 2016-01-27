@@ -92,7 +92,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 		JPanel ksPanel = new JPanel(new GridLayout(1,5, 1, 3));
 		ksPanel.add(new JLabel("Key Store Path:"));
-		tfPathKS = new JTextField("C:\\ks");
+		tfPathKS = new JTextField("/home/ben/Desktop/keystore");
 		ksPanel.add(tfPathKS);
 		ksPanel.add(new JLabel("ReTransmit ID:  "));
 		ksPanel.add(tfRetransmit);
@@ -398,7 +398,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 	private void GenerateWitness()
 	{
-		String witnessRaw = party1.generateWitness().serialize();
+		String witnessRaw = party1.generateWitness().toString();
 
 		try
 		{
@@ -507,7 +507,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 	public static void main(String[] args)
 	{
-		new ClientGUI("dell", 5222);
+		new ClientGUI("ben-probook", 5222);
 	}
 
 	private int GetIndexOfUserName(String name)

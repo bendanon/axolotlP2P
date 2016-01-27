@@ -20,13 +20,22 @@ public class FingerprintWitness implements IIdentityWitness {
         this.fingerprint = fingerprint;
     }
 
+    /**
+     * Compares fingerprints with the identity key supplied
+     * @param sessionIdentityKey identity key to compare FG with
+     * @return
+     */
     @Override
     public boolean authenticate(IdentityKey sessionIdentityKey) {
         return fingerprint.equals(sessionIdentityKey.getFingerprint().substring(3));
     }
 
+    /**
+     * Makes a displayable form of the witness witness
+     * @return
+     */
     @Override
-    public String serialize() {
+    public String toString() {
         return fingerprint;
     }
 }

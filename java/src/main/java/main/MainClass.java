@@ -111,7 +111,7 @@ public class MainClass {
         try {
 
 
-            String witnessRaw = party2.generateWitness().serialize();
+            String witnessRaw = party2.generateWitness().toString();
             //witnessRaw = witnessRaw.substring(0, witnessRaw.length() / 2 - 2);
             System.out.println(witnessRaw);
 

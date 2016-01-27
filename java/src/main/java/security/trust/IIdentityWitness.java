@@ -19,9 +19,8 @@ public interface IIdentityWitness {
     boolean authenticate(IdentityKey sessionIdentityKey);
 
     /**
-     * Sreialzies this witness so it can be sent transported on some
-     * safe side channel to a peer (channel needs to authenticated, not private)
-     * @return
+     * Makes a displayable form of the witness witness
+     * @return the string representing the fingerprint
      */
-    String serialize();
+    String toString();
 }

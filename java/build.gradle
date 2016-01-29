@@ -1,6 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
+apply plugin: 'application'
 
 sourceCompatibility = 1.7
 archivesBaseName = "secure-chat-p2p-java"
@@ -16,31 +15,12 @@ dependencies {
     compile 'org.whispersystems:axolotl-java:1.4.2'
 }
 
-task installArchives(type: Upload) {
-    description "Installs the artifacts to the local Maven repository."
-    configuration = configurations['archives']
-    repositories {
-        mavenDeployer {
-            repository url: "file://${System.properties['user.home']}/.m2/repository"
-        }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'ChatGUI.ClientGUI',
+                   'Class-Path': configurations.runtime.files.collect { "$it.name" }.join(' ')
     }
 }
 
-task packageJavadoc(type: Jar, dependsOn: 'javadoc') {
-    from javadoc.destinationDir
-    classifier = 'javadoc'
-}
-
-task packageSources(type: Jar) {
-    from sourceSets.main.allSource
-    classifier = 'sources'
-}
-
-artifacts {
-    archives(packageJavadoc) {
-        type = 'javadoc'
-    }
-
-    archives packageSources
-}
-
+mainClassName = 'ChatGUI.ClientGUI'

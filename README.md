@@ -35,7 +35,7 @@ for message transport.
 
 ### Generate an empty key store for each user
  - After user login, type the desired path for a key store (without file name)
- - Click "Create KS"
+ - Click "Create KS".
 
 
 

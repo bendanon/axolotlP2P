@@ -14,7 +14,8 @@ for message transport.
 
 ### Build the project
   - Install java (sudo apt-get install default-jre)
-  - Build gradle project to fetch dependencies and compile the java code (./gradlew build)
+  - Install gradle 2.5 (https://services.gradle.org/distributions/gradle-2.5-all.zip)
+  - From the project directory, build the project and create an executable JAR (gradle intallDist)
   - Dependencies are also inside the lib folder, just in case
 
 ### Get and install the openfire XMPP server
@@ -23,13 +24,13 @@ for message transport.
 
 ### Create some artificial users
  - Visit local server management [interface](http://localhost:9090)
- - Follow the wizard instructions for initial configuration
- - Login as (admin, password_you_chose), username is not your email!
+ - Follow the wizard instructions for openfire server setup
+ - Login as (admin, password_you_chose), username is "admin", not your email!
  - Add at least 3 users (enough for group chat)
  - More detailed instructions [here](https://www.digitalocean.com/community/tutorials/how-to-install-openfire-xmpp-server-on-a-debian-or-ubuntu-vps)
 
 ### Run the program 
- - Three instances (one to simulate each user) with "ClientGUI" as the main class
+ - Three instances (one to simulate each user) with "ClientGUI" as the main class (java -jar java/build/install/java/lib/secure-chat-p2p-java.jar)
  - Each instance should login as a different user by typing the user name and password in the textboxes
  and clicking "Login"
 

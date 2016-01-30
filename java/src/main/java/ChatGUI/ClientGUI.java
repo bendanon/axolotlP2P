@@ -401,9 +401,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		GenerateWitness();
 
 		RefreshList();
-
-		btnStartSession.setEnabled(true);
 		btnRefresh.setEnabled(true);
+
 	}
 
 	private void GenerateWitness()
@@ -469,17 +468,17 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			}
 		}
 
-		int size = listModel.getSize();
-
 		if (listModel.getSize() == 0)
 		{
 			tfMessage.setText("All your friends are offline");
 			tfMessage.setEditable(false);
+			btnStartSession.setEnabled(false);
 		}
 		else
 		{
 			tfMessage.setText("Press Start Session");
 			tfMessage.setEditable(false);
+			btnStartSession.setEnabled(true);
 		}
 
 		listOfUsers.updateUI();

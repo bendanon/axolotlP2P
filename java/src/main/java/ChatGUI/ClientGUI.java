@@ -92,7 +92,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 		JPanel ksPanel = new JPanel(new GridLayout(1,5, 1, 3));
 		ksPanel.add(new JLabel("Key Store Path:"));
-		tfPathKS = new JTextField("/home/ben/Desktop/keystore");
+		tfPathKS = new JTextField("C:\\ks");
 		ksPanel.add(tfPathKS);
 		ksPanel.add(new JLabel("ReTransmit ID:  "));
 		ksPanel.add(tfRetransmit);
@@ -144,7 +144,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		retransmitBtn = new JButton("ReTransmit");
 		retransmitBtn.addActionListener(this);
 		retransmitBtn.setEnabled(false);
-		whoIsIn = new JButton("Witness");
+		whoIsIn = new JButton("Establish Trust");
 		whoIsIn.addActionListener(this);
 		whoIsIn.setEnabled(false);
 		btnCreateKS = new JButton("Create KS");
@@ -153,7 +153,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		btnStartSession = new JButton("Start Session");
 		btnStartSession.addActionListener(this);
 		btnRefresh.addActionListener(this);
-		tfFingerPrint = new JTextField("Your Finger Print...");
+		tfFingerPrint = new JTextField("Your Fingerprint...");
 		tfFingerPrint.setEditable(false);
 		tfFingerPrint.setBackground(Color.WHITE);
 		JPanel southPanel = new JPanel(new GridLayout(2,1));
@@ -164,7 +164,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		buttonPanel.add(btnStartSession);
 		buttonPanel.add(retransmitBtn);
 		buttonPanel.add(whoIsIn);
-		buttonPanel.add(btnCreateKS);
+		//buttonPanel.add(btnCreateKS);
 		southPanel.add(tfFingerPrint);
 		southPanel.add(buttonPanel);
 
@@ -176,6 +176,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		setSize(600, 600);
 		setVisible(true);
 		tfMessage.requestFocus();
+		btnStartSession.setEnabled(false);
+		btnRefresh.setEnabled(false);
 	}
 
 	// called by the Client to append text in the TextArea
@@ -269,18 +271,19 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		{
 			try
 			{
-				String result = JOptionPane.showInputDialog(this, "Please enter the finger print", "Finger Print Witness",JOptionPane.INFORMATION_MESSAGE);
-				String userName = listOfUsers.getSelectedValue().GetUserName();
-
-				if (result !=null)
+				if (listOfUsers.getSelectedValue() != null)
 				{
-					if (party1.consumeIdentityWitness(listOfUsers.getSelectedValue().GetUserName(),
-							new FingerprintWitness(hexHumanizer.dehumanize(result))))
-					{
-						int index = GetIndexOfUserName(userName);
-						User fromUser = listOfUsers.getModel().getElementAt(index);
-						fromUser.SetUserStatus(eUserStatus.Trusted);
-						listOfUsers.updateUI();
+					String result = JOptionPane.showInputDialog(this, "Please enter the fingerprint", "Fingerprint", JOptionPane.INFORMATION_MESSAGE);
+					String userName = listOfUsers.getSelectedValue().GetUserName();
+
+					if (result != null) {
+						if (party1.consumeIdentityWitness(listOfUsers.getSelectedValue().GetUserName(),
+								new FingerprintWitness(hexHumanizer.dehumanize(result)))) {
+							int index = GetIndexOfUserName(userName);
+							User fromUser = listOfUsers.getModel().getElementAt(index);
+							fromUser.SetUserStatus(eUserStatus.Trusted);
+							listOfUsers.updateUI();
+						}
 					}
 				}
 
@@ -311,6 +314,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 			while (users.hasMoreElements())
 			{
+				Thread.sleep(100);
 				User user = users.nextElement();
 
 				if (!user.GetUserName().equals(currentUser.GetUserName()))
@@ -327,11 +331,12 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			}
 
 			listOfUsers.updateUI();
-
 			btnStartSession.setEnabled(false);
-
 			tfMessage.setText("");
 			tfMessage.setEditable(true);
+			btnRefresh.setEnabled(false);
+			retransmitBtn.setEnabled(true);
+			whoIsIn.setEnabled(true);
 		}
  		catch (Exception ex)
 		{
@@ -394,6 +399,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		GenerateWitness();
 
 		RefreshList();
+
+		btnStartSession.setEnabled(true);
+		btnRefresh.setEnabled(true);
 	}
 
 	private void GenerateWitness()
@@ -419,8 +427,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		connected = true;
 
 		login.setEnabled(false);
-		retransmitBtn.setEnabled(true);
-		whoIsIn.setEnabled(true);
+
 		tfServer.setEditable(false);
 		tfPort.setEditable(false);
 		tfUser.setEditable(false);
@@ -507,7 +514,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 	public static void main(String[] args)
 	{
-		new ClientGUI("ben-probook", 5222);
+		new ClientGUI("dell", 5222);
 	}
 
 	private int GetIndexOfUserName(String name)
@@ -581,8 +588,10 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 				} catch (XMPPException e) {
 					e.printStackTrace();
 				}
+				btnRefresh.setEnabled(false);
 
 				break;
+
 			}
 			case eKEY_RESPONSE:
 			{
@@ -612,8 +621,9 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 				} catch (InvalidKeyException e) {
 					e.printStackTrace();
 				}
-
+				btnRefresh.setEnabled(false);
 				break;
+
 			}
 			case eNORMAL:
 			{
@@ -688,4 +698,5 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			e.printStackTrace();
 		}
 	}
+
 }

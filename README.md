@@ -31,13 +31,16 @@ for message transport.
 
 ### Run the program 
  - Three instances (one to simulate each user) with "ClientGUI" as the main class 
-    - (for i in 1 2 3; do java -jar java/build/install/java/lib/secure-chat-p2p-java.jar & done)
- - Each instance should login as a different user by typing the user name and password in the textboxes
- and clicking "Login"
+    - (for i in 1 2 3; do java -jar java/build/install/java/lib/secure-chat-p2p-java.jar & done) 
 
-### Generate an empty key store for each user
- - After user login, type the desired path for a key store (without file name)
- - Click "Create KS".
+### Login
+ - Type the server address (by default should be the computer name)
+ - Keep the default port number (5222)
+ - Type the user name and password (different for each instance)
+ - Type the desired path for a key store (without file name). If the key store already exists it will be used, otherwise a new one will be generated.
+ - Hit Login
+  
+
 
 
 

@@ -241,7 +241,7 @@ public class XmppManager implements ICommManager {
 	}
 
 	private List<String> getFriends(){
-		List<String> friendList = new ArrayList<String>();
+		List<String> friendList = new ArrayList<>();
 		String line;
 		try (
 				InputStream fis = new FileInputStream("/home/ben/Desktop/keystore/friends.txt");

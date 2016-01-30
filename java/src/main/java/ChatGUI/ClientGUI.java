@@ -7,7 +7,9 @@ import org.jivesoftware.smack.XMPPException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.net.URL;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import org.whispersystems.libaxolotl.*;
@@ -410,8 +412,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 		try
 		{
-			String current = new java.io.File(getClass().getClassLoader().getResource("64K_english_dict.dic").getFile()).getCanonicalPath();
-			hexHumanizer = new HexHumanizer (current);
+			hexHumanizer = new HexHumanizer ("64K_english_dict.dic");
 			String humanized = hexHumanizer.humanize(witnessRaw);
 			tfFingerPrint.setText(humanized);
 		} catch (Exception e) {

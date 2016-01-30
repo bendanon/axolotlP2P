@@ -14,7 +14,7 @@ for message transport.
 
 ### Build the project
   - Install java (sudo apt-get install default-jre)
-  - Install gradle 2.5 (https://services.gradle.org/distributions/gradle-2.5-all.zip)
+  - Install [gradle 2.5](https://services.gradle.org/distributions/gradle-2.5-all.zip)
   - From the project directory, build the project and create an executable JAR (gradle intallDist)
   - Dependencies are also inside the lib folder, just in case
 
@@ -30,7 +30,8 @@ for message transport.
  - More detailed instructions [here](https://www.digitalocean.com/community/tutorials/how-to-install-openfire-xmpp-server-on-a-debian-or-ubuntu-vps)
 
 ### Run the program 
- - Three instances (one to simulate each user) with "ClientGUI" as the main class (java -jar java/build/install/java/lib/secure-chat-p2p-java.jar)
+ - Three instances (one to simulate each user) with "ClientGUI" as the main class 
+    - (for i in 1 2 3; do java -jar java/build/install/java/lib/secure-chat-p2p-java.jar & done)
  - Each instance should login as a different user by typing the user name and password in the textboxes
  and clicking "Login"
 

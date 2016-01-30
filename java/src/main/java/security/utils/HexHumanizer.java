@@ -1,9 +1,6 @@
 package security.utils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 
 /**
@@ -24,10 +21,11 @@ public class HexHumanizer {
     public HexHumanizer(String dictpath) throws Exception {
         hexToWord = new HashMap<>();
         wordToHex = new HashMap<>();
-        FileInputStream fis = new FileInputStream(new File(dictpath));
+
+        InputStream is = ClassLoader.getSystemResourceAsStream(dictpath);
 
         //Construct BufferedReader from InputStreamReader
-        BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
         String line = null;
         int dictSize = 0;

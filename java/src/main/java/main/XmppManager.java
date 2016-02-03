@@ -1,8 +1,5 @@
 package main;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.io.*;
 import java.nio.charset.Charset;
 //git
@@ -24,7 +21,8 @@ import ChatCommons.ICommManager;
 import ChatCommons.eMessageType;
 import ChatCommons.INotifier;
 import main.FriendStatus;
-
+import org.jivesoftware.smackx.*;
+import org.jivesoftware.smackx.search.*;
 public class XmppManager implements ICommManager {
 
 	private static final int packetReplyTimeout = 500; // ms
@@ -241,19 +239,44 @@ public class XmppManager implements ICommManager {
 	}
 
 	private List<String> getFriends(){
-		List<String> friendList = new ArrayList<>();
-		String line;
-		try (
-				InputStream fis = new FileInputStream("/home/ben/Desktop/keystore/friends.txt");
-				InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
-				BufferedReader br = new BufferedReader(isr);
-		) {
-			while ((line = br.readLine()) != null) {
-				friendList.add(line);
-			}
+		//UserSearchManager userSearcher= new UserSearchManager(connection);
+
+		List<String> friendList = new ArrayList<String>();
+
+		ReportedData data = null;
+
+		try {
+			UserSearchManager search = new UserSearchManager(connection);
+			Form searchForm = search.getSearchForm("search." + connection.getServiceName());
+			Form answerForm = searchForm.createAnswerForm();
+			UserSearch userSearch = new UserSearch();
+			answerForm.setAnswer("Username", true);
+
+			answerForm.setAnswer("search", "*");
+
+			data = userSearch.sendSearchForm(connection, answerForm, "search." + connection.getServiceName());
+
 		}
-		catch(java.io.IOException ioExc){
+		catch (XMPPException xe){
 			System.out.println(String.format("error in getting friends"));
+		}
+		if (data.getRows() != null) {
+			System.out.println("found friends");
+			Iterator<ReportedData.Row> iterator = data.getRows();
+
+			while (iterator.hasNext()) {
+
+				ReportedData.Row row = iterator.next();
+
+				Iterator valueIterator = row.getValues("jid");
+
+				if (valueIterator.hasNext()) {
+
+					String name = valueIterator.next().toString();
+					name=name.split("@")[0];
+					friendList.add(name);
+				}
+			}
 		}
 		return friendList;
 	}

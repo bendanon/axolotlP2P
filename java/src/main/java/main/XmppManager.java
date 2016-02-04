@@ -241,8 +241,15 @@ public class XmppManager implements ICommManager {
 	private List<String> getFriends(){
 		//UserSearchManager userSearcher= new UserSearchManager(connection);
 
-		List<String> friendList = new ArrayList<String>();
+		List<String> friendList = new ArrayList();
 
+		Roster roster = connection.getRoster();
+		Collection<RosterEntry> entries = roster.getEntries();
+		for (RosterEntry entry : entries) {
+			friendList.add(entry.getName());
+		}
+
+		/*
 		ReportedData data = null;
 
 		try {
@@ -277,7 +284,7 @@ public class XmppManager implements ICommManager {
 					friendList.add(name);
 				}
 			}
-		}
+		}*/
 		return friendList;
 	}
 	private void connectToDefaultFriends(){

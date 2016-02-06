@@ -94,7 +94,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		ksPanel.add(new JLabel(""));
 
 		JPanel dropMsgPanel = new JPanel(new GridLayout(1,2, 1, 2));
-		dropMsgPanel.add(new JLabel("Create failure during sending message?"));
+		dropMsgPanel.add(new JLabel("Hide message from peer"));
 		dropMsgPanel.add(cbDropMsg);
 
 		northPanel.add(ksPanel);

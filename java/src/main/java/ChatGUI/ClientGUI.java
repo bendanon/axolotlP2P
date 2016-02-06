@@ -7,9 +7,7 @@ import org.jivesoftware.smack.XMPPException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.net.URL;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import org.whispersystems.libaxolotl.*;
@@ -31,7 +29,6 @@ import java.util.ListIterator;
 public class ClientGUI extends JFrame implements ActionListener, INotifier, IChatSender
 {
 	private JLabel label;
-	private JLabel labelKS;
 	private JTextField tfMessage;
 	private JTextField tfServer, tfPort, tfRetransmit;
 	private JPasswordField tfPassword;
@@ -52,7 +49,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 	private PersistentTrustStore store1 = null;
 	private HexHumanizer hexHumanizer = null;
 	private SecureConversation secureConversation = null;
-	private String tempMsg= "";
 	private User currentUser = null;
 
 	ClientGUI(String host, int port)
@@ -62,11 +58,8 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		defaultHost = host;
 
 		tfRetransmit = new JTextField();
-		// The NorthPanel with:
-		JPanel northPanel = new JPanel(new GridLayout(5,1));
-		// the server name anmd the port number
+		JPanel northPanel = new JPanel(new GridLayout(6,1));
 		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
-		// the two JTextField with default value for server address and port number
 		tfServer = new JTextField(host);
 		tfPort = new JTextField("" + port);
 		tfPort.setHorizontalAlignment(SwingConstants.LEFT);
@@ -78,7 +71,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		serverAndPort.add(new JLabel(""));
 
 		JPanel userAndPasswordPanel = new JPanel(new GridLayout(1,5,1,3));
-		// the two JTextField with default value for server address and port number
 		tfUser = new JTextField("user1");
 		tfPassword = new JPasswordField("crypto");
 		tfPassword.setHorizontalAlignment(SwingConstants.LEFT);
@@ -99,10 +91,14 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		ksPanel.add(new JLabel("ReTransmit ID:  "));
 		ksPanel.add(tfRetransmit);
 		cbDropMsg = new JCheckBox();
-		ksPanel.add(cbDropMsg);
+		ksPanel.add(new JLabel(""));
 
+		JPanel dropMsgPanel = new JPanel(new GridLayout(1,2, 1, 2));
+		dropMsgPanel.add(new JLabel("Create failure during sending message?"));
+		dropMsgPanel.add(cbDropMsg);
 
 		northPanel.add(ksPanel);
+		northPanel.add(dropMsgPanel);
 
 		label = new JLabel("Login and then Enter your message below", SwingConstants.CENTER);
 		northPanel.add(label);
@@ -111,7 +107,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		tfMessage.setEnabled(false);
 		tfMessage.setBackground(Color.WHITE);
 		northPanel.add(tfMessage);
-
 		add(northPanel, BorderLayout.NORTH);
 
 		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
@@ -126,21 +121,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		ta.setEditable(false);
 		add(centerPanel, BorderLayout.CENTER);
 
-		listOfUsers.addMouseListener(new MouseAdapter(){
-			public void mouseClicked(MouseEvent mouseEvent) {
-				JList theList = (JList) mouseEvent.getSource();
-				if (mouseEvent.getClickCount() == 2) {
-					int index = theList.locationToIndex(mouseEvent.getPoint());
-					if (index >= 0) {
-						User o = (User)theList.getModel().getElementAt(index);
-						System.out.println("Double-clicked on: " + o.toString());
-						//o.SetUserStatus(eUserStatus.Offline);
-					}
-				}
-			}
-		});
-
-		// the 3 buttons
 		login = new JButton("Login");
 		login.addActionListener(this);
 		retransmitBtn = new JButton("ReTransmit");
@@ -166,13 +146,10 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		buttonPanel.add(btnStartSession);
 		buttonPanel.add(retransmitBtn);
 		buttonPanel.add(whoIsIn);
-		//buttonPanel.add(btnCreateKS);
 		southPanel.add(tfFingerPrint);
 		southPanel.add(buttonPanel);
 
 		add(southPanel, BorderLayout.SOUTH);
-
-		// add(southPanel2,BorderLayout.SOUTH);
 
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setSize(600, 600);
@@ -182,14 +159,11 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		btnRefresh.setEnabled(false);
 	}
 
-	// called by the Client to append text in the TextArea
 	void append(String str) {
 		ta.append(str);
 		ta.setCaretPosition(ta.getText().length() - 1);
 	}
 
-	// called by the GUI is the connection failed
-	// we reset our buttons, label, textfield
 	void connectionFailed() {
 		login.setEnabled(true);
 		retransmitBtn.setEnabled(false);
@@ -451,65 +425,30 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		}
 	}
 
-	private void RefreshList()
-	{
+	private void RefreshList() {
 		listModel.clear();
 		FriendStatus[] friends = xmppManager.getBuddiesStats();
-		for (int i=0; i<friends.length; i++)
-		{
-			if (friends[i].getStatus().equals("online"))
-			{
+		for (int i = 0; i < friends.length; i++) {
+			if (friends[i].getStatus().equals("online")) {
 				String name = friends[i].getName();
-				if (!name.equals(currentUser.GetUserName()))
-				{
+				if (!name.equals(currentUser.GetUserName())) {
 					listModel.addElement(new User(name, eUserStatus.Offline));
 					secureConversation.addPeer(name);
 				}
 			}
 		}
 
-		if (listModel.getSize() == 0)
-		{
+		if (listModel.getSize() == 0) {
 			tfMessage.setText("All your friends are offline");
 			tfMessage.setEditable(false);
 			btnStartSession.setEnabled(false);
-		}
-		else
-		{
+		} else {
 			tfMessage.setText("Press Start Session");
 			tfMessage.setEditable(false);
 			btnStartSession.setEnabled(true);
 		}
 
 		listOfUsers.updateUI();
-	}
-
-	private void RemoveUserFromList(String userName)
-	{
-		int index = GetIndexOfUserName(userName);
-		listModel.remove(index);
-		listOfUsers.updateUI();
-	}
-
-	private void ConnectedWithFriends(String userName) throws XMPPException
-	{
-		userName = userName.toLowerCase();
-		if (userName.equals("user1"))
-		{
-			secureConversation.addPeer("user2");
-			secureConversation.addPeer("user3");
-
-		}
-		else if (userName.equals("user2"))
-		{
-			secureConversation.addPeer("user1");
-			secureConversation.addPeer("user3");
-		}
-		else
-		{
-			secureConversation.addPeer("user1");
-			secureConversation.addPeer("user2");
-		}
 	}
 
 	public static void main(String[] args)
@@ -630,7 +569,6 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 				try
 				{
 					DecryptedPackage dp= secureConversation.receiveMessage(from, Message);
-					//String display = String.format("%s[%d/%d]:%s", from, dp.getIndex(), dp.getLastChainIndex(), dp.getContent());
 					append(display(from,dp));
 				}
 				catch (Exception ex)
@@ -698,5 +636,4 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 			e.printStackTrace();
 		}
 	}
-
 }

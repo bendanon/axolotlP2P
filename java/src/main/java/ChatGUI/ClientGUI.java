@@ -93,9 +93,12 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		cbDropMsg = new JCheckBox();
 		ksPanel.add(new JLabel(""));
 
-		JPanel dropMsgPanel = new JPanel(new GridLayout(1,2, 1, 2));
+		JPanel dropMsgPanel = new JPanel(new GridLayout(1,5, 1, 3));
 		dropMsgPanel.add(new JLabel("Hide message from peer"));
 		dropMsgPanel.add(cbDropMsg);
+		dropMsgPanel.add(new JLabel(""));
+
+		dropMsgPanel.add(new JLabel(""));
 
 		northPanel.add(ksPanel);
 		northPanel.add(dropMsgPanel);

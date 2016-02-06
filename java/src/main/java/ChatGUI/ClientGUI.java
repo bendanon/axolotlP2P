@@ -126,7 +126,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		retransmitBtn = new JButton("ReTransmit");
 		retransmitBtn.addActionListener(this);
 		retransmitBtn.setEnabled(false);
-		whoIsIn = new JButton("Establish Trust");
+		whoIsIn = new JButton("Authenticate peer");
 		whoIsIn.addActionListener(this);
 		whoIsIn.setEnabled(false);
 		btnCreateKS = new JButton("Create KS");

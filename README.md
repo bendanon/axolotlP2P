@@ -19,15 +19,28 @@ for message transport.
   - Dependencies are also inside the lib folder, just in case
 
 ### Get and install the openfire XMPP server
- - wget -O openfire.deb http://www.igniterealtime.org/downloadServlet?filename=openfire/openfire_3.8.2_all.deb
+ - wget -O openfire.deb http://www.igniterealtime.org/downloadServlet?filename=openfire/openfire_4.0.1_all.deb
  - sudo dpkg --install openfire.deb
 
 ### Create some artificial users
  - Visit local server management [interface](http://localhost:9090)
  - Follow the wizard instructions for openfire server setup
  - Login as (admin, password_you_chose), username is "admin", not your email!
- - Add at least 3 users (enough for group chat)
  - More detailed instructions [here](https://www.digitalocean.com/community/tutorials/how-to-install-openfire-xmpp-server-on-a-debian-or-ubuntu-vps)
+ - Add at least 3 users (enough for group chat)
+    - "Users/Groups" tab
+    - Left side menu - "Create new user"
+ - Add friends to each other's roster
+    - "Users/Groups" tab
+    - Click on the user's name
+    - Left side menu - "Roster"
+    - Add new item written in green, on the right side of the screen
+        - JID=friendname@servername
+        - Nickname=friendname
+        - Left side menu - "Roster"
+        - Hit "edit" on each roster menu item
+        - Change the "Subscription" field to "both"
+ 
 
 ### Run the program 
  - Three instances (one to simulate each user) with "ClientGUI" as the main class 

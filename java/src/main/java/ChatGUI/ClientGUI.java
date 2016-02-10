@@ -64,15 +64,15 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 		tfPort = new JTextField("" + port);
 		tfPort.setHorizontalAlignment(SwingConstants.LEFT);
 
-		serverAndPort.add(new JLabel("Server Address:  "));
+		serverAndPort.add(new JLabel("Server Name:  "));
 		serverAndPort.add(tfServer);
 		serverAndPort.add(new JLabel("Port Number:  "));
 		serverAndPort.add(tfPort);
 		serverAndPort.add(new JLabel(""));
 
 		JPanel userAndPasswordPanel = new JPanel(new GridLayout(1,5,1,3));
-		tfUser = new JTextField("user1");
-		tfPassword = new JPasswordField("crypto");
+		tfUser = new JTextField();
+		tfPassword = new JPasswordField();
 		tfPassword.setHorizontalAlignment(SwingConstants.LEFT);
 
 		userAndPasswordPanel.add(new JLabel("User Name:  "));
@@ -86,7 +86,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 		JPanel ksPanel = new JPanel(new GridLayout(1,5, 1, 3));
 		ksPanel.add(new JLabel("Key Store Path:"));
-		tfPathKS = new JTextField("C:\\ks");
+		tfPathKS = new JTextField();
 		ksPanel.add(tfPathKS);
 		ksPanel.add(new JLabel("ReTransmit ID:  "));
 		ksPanel.add(tfRetransmit);
@@ -456,7 +456,7 @@ public class ClientGUI extends JFrame implements ActionListener, INotifier, ICha
 
 	public static void main(String[] args)
 	{
-		new ClientGUI("dell", 5222);
+		new ClientGUI("", 5222);
 	}
 
 	private int GetIndexOfUserName(String name)

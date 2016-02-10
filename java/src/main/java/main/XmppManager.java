@@ -239,9 +239,7 @@ public class XmppManager implements ICommManager {
 	}
 
 	private List<String> getFriends(){
-		//UserSearchManager userSearcher= new UserSearchManager(connection);
-
-		List<String> friendList = new ArrayList();
+        List<String> friendList = new ArrayList();
 
 		Roster roster = connection.getRoster();
 		Collection<RosterEntry> entries = roster.getEntries();
@@ -249,42 +247,6 @@ public class XmppManager implements ICommManager {
 			friendList.add(entry.getName());
 		}
 
-		/*
-		ReportedData data = null;
-
-		try {
-			UserSearchManager search = new UserSearchManager(connection);
-			Form searchForm = search.getSearchForm("search." + connection.getServiceName());
-			Form answerForm = searchForm.createAnswerForm();
-			UserSearch userSearch = new UserSearch();
-			answerForm.setAnswer("Username", true);
-
-			answerForm.setAnswer("search", "*");
-
-			data = userSearch.sendSearchForm(connection, answerForm, "search." + connection.getServiceName());
-
-		}
-		catch (XMPPException xe){
-			System.out.println(String.format("error in getting friends"));
-		}
-		if (data.getRows() != null) {
-			System.out.println("found friends");
-			Iterator<ReportedData.Row> iterator = data.getRows();
-
-			while (iterator.hasNext()) {
-
-				ReportedData.Row row = iterator.next();
-
-				Iterator valueIterator = row.getValues("jid");
-
-				if (valueIterator.hasNext()) {
-
-					String name = valueIterator.next().toString();
-					name=name.split("@")[0];
-					friendList.add(name);
-				}
-			}
-		}*/
 		return friendList;
 	}
 	private void connectToDefaultFriends(){
